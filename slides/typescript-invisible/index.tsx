@@ -177,6 +177,129 @@ function DemoPage({ id, title, code, entry }: { id: DemoId; title: string; code:
   );
 }
 
+function InvisibleWord() {
+  const host = useRef<HTMLSpanElement>(null);
+  const text = useRef<HTMLSpanElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const element = host.current!;
+    const label = text.current!;
+    const layer = canvas.current!;
+    const ctx = layer.getContext('2d');
+    if (!ctx) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const padding = 240;
+    let frame = 0;
+    let progress = 0;
+    let target = 0;
+    let lastTime = 0;
+    let disposed = false;
+    let particles: { x: number; y: number; dx: number; dy: number; size: number; alpha: number; delay: number }[] = [];
+
+    const prepare = () => {
+      const style = getComputedStyle(label);
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      // Hidden/pre-mounted pages have no layout yet. Wait for a valid size.
+      if (width <= 0 || height <= 0) return false;
+      layer.width = width + padding * 2;
+      layer.height = height + padding * 2;
+      const mask = document.createElement('canvas');
+      mask.width = width;
+      mask.height = height;
+      const ink = mask.getContext('2d', { willReadFrequently: true });
+      if (!ink) return false;
+      ink.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      ink.letterSpacing = style.letterSpacing;
+      ink.fillStyle = style.color;
+      const metrics = ink.measureText('invisible');
+      const ascent = metrics.fontBoundingBoxAscent;
+      const descent = metrics.fontBoundingBoxDescent;
+      ink.fillText('invisible', 0, (height - ascent - descent) / 2 + ascent);
+      const pixels = ink.getImageData(0, 0, width, height).data;
+      particles = [];
+      for (let y = 0; y < height; y += 3) {
+        for (let x = 0; x < width; x += 3) {
+          const alpha = pixels[(y * width + x) * 4 + 3] / 255;
+          if (alpha < 0.1) continue;
+          particles.push({
+            x: x + padding, y: y + padding,
+            dx: 40 + Math.random() * 175, dy: -35 - Math.random() * 170,
+            size: 1.4 + Math.random() * 1.8, alpha,
+            delay: (x / width) * 0.22 + Math.random() * 0.1,
+          });
+        }
+      }
+      ctx.fillStyle = style.color;
+      return true;
+    };
+
+    const draw = (now: number) => {
+      const delta = Math.min(now - lastTime, 40);
+      lastTime = now;
+      progress = Math.max(0, Math.min(1, progress + (target ? 1 : -1) * delta / (target ? 1450 : 850)));
+      ctx.clearRect(0, 0, layer.width, layer.height);
+      label.style.opacity = String(Math.max(0, 1 - progress / 0.15));
+      for (const particle of particles) {
+        const t = Math.max(0, Math.min(1, (progress - particle.delay) / (1 - particle.delay)));
+        const drift = t * t;
+        ctx.globalAlpha = particle.alpha * Math.min(1, progress / 0.15) * (1 - t) ** 1.5;
+        ctx.fillRect(
+          particle.x + particle.dx * drift,
+          particle.y + particle.dy * drift + Math.sin(t * 7 + particle.x) * t * 12,
+          particle.size, particle.size,
+        );
+      }
+      if (progress !== target) frame = requestAnimationFrame(draw);
+      else frame = 0;
+    };
+    const update = () => {
+      target = element.matches(':hover, :focus-visible') ? 1 : 0;
+      if (reducedMotion.matches) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+        progress = target;
+        ctx.clearRect(0, 0, layer.width, layer.height);
+        label.style.opacity = String(1 - target);
+        return;
+      }
+      if (!frame) {
+        if (progress === 0 && !prepare()) return;
+        lastTime = performance.now();
+        frame = requestAnimationFrame(draw);
+      }
+    };
+    prepare();
+    const resizeObserver = new ResizeObserver(() => {
+      if (progress === 0 && !frame) prepare();
+    });
+    resizeObserver.observe(element);
+    void document.fonts.ready.then(() => { if (!disposed && progress === 0) prepare(); });
+    element.addEventListener('pointerenter', update);
+    element.addEventListener('pointerleave', update);
+    element.addEventListener('focus', update);
+    element.addEventListener('blur', update);
+    return () => {
+      disposed = true;
+      resizeObserver.disconnect();
+      cancelAnimationFrame(frame);
+      element.removeEventListener('pointerenter', update);
+      element.removeEventListener('pointerleave', update);
+      element.removeEventListener('focus', update);
+      element.removeEventListener('blur', update);
+      label.style.opacity = '1';
+    };
+  }, []);
+
+  return (
+    <span ref={host} tabIndex={0} style={{ position: 'relative', display: 'inline-block', color: 'var(--osd-accent)' }}>
+      <span ref={text}>invisible</span>
+      <canvas ref={canvas} aria-hidden="true" style={{ position: 'absolute', left: -240, top: -240, pointerEvents: 'none' }} />
+    </span>
+  );
+}
+
 const Intro: Page = () => (
   <section style={{
     position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px',
@@ -188,7 +311,7 @@ const Intro: Page = () => (
       fontSize: 152, lineHeight: '164px', fontWeight: 650, letterSpacing: '-0.055em',
     }}>
       Rendre TypeScript<br />
-      <span style={{ color: 'var(--osd-accent)' }}>invisible</span>
+      <InvisibleWord />
     </h1>
     <p style={{ margin: 0, fontSize: 44, lineHeight: '62px', color: muted }}>
       Concevoir des APIs pour l’inférence de types
