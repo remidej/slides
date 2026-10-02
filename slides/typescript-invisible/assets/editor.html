@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap">
+<style>
+  :root { color-scheme: dark; --bg: oklch(27.9% .041 260.031); --text: oklch(96.8% .007 247.896); --muted: oklch(70.4% .04 256.788); --line: oklch(37.2% .044 257.287); --accent: oklch(77.7% .152 181.912); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font: 24px Inter, sans-serif; }
+  body { display: grid; grid-template-rows: 60px 1fr; }
+  header { display: flex; align-items: center; gap: 20px; padding: 0 24px; border-bottom: 1px solid var(--line); }
+  .ts { color: var(--accent); font: 700 22px monospace; }
+  select, button { background: transparent; color: var(--text); font: inherit; border: 0; border-radius: 6px; padding: 5px 12px; }
+  select { min-width: 290px; color: var(--accent); font-family: monospace; }
+  option { background: #1d293d; }
+  button { cursor: pointer; font-size: 22px; opacity: 0; pointer-events: none; }
+  header:hover button, button:focus-visible { opacity: 1; pointer-events: auto; }
+  button:hover { background: #314158; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); }
+  #complete { margin-left: auto; }
+  #editor { min-height: 0; min-width: 0; margin-inline: 36px; position: relative; }
+  #loading { padding: 36px; color: var(--muted); font-size: 28px; white-space: pre-wrap; }
+  #status { position: absolute; bottom: 24px; left: 24px; right: 24px; padding: 16px; background: var(--bg); color: var(--accent); font-size: 24px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="ts">TS</span>
+  <select id="files" aria-label="Fichier du projet TypeScript"></select>
+  <button id="complete" title="Afficher les suggestions à la position du curseur (Ctrl+Espace)">Compléter</button>
+  <button id="reset" title="Restaurer tous les fichiers de cette page">Réinitialiser</button>
+</header>
+<div id="editor"><div id="loading" role="status">Chargement de l’éditeur TypeScript…</div></div>
+<span id="status" role="status" hidden>Initialisation…</span>
+<script>
+(() => {
+  const CDN = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min';
+  const origin = parent.location.origin;
+  const status = document.getElementById('status');
+  let initialized = false;
+  let editor;
+  const models = new Map();
+  const views = new Map();
+  let initialFiles, activeFile, changing = false;
+  const send = (data) => parent.postMessage(data, origin);
+  let escaping = false;
+  // Capture before Monaco: Escape leaves the editor even with suggestions open.
+  window.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !editor?.hasWidgetFocus()) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    escaping = true;
+    editor.trigger('keyboard', 'hideSuggestWidget', {});
+    editor.trigger('keyboard', 'closeParameterHints', {});
+    editor.trigger('keyboard', 'editor.action.hideHover', {});
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    send({ kind: 'invisible:leave' });
+  }, true);
+  window.addEventListener('keyup', event => {
+    if (event.key !== 'Escape' || !escaping) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    send({ kind: 'invisible:release' });
+  }, true);
+  const fail = (error) => {
+    console.error(error);
+    status.hidden = false;
+    status.textContent = 'Éditeur indisponible — vérifier la connexion et recharger';
+    const loading = document.getElementById('loading');
+    if (loading) loading.textContent = 'Impossible de charger Monaco ou son service TypeScript.\nAutoriser cdn.jsdelivr.net, puis recharger la page.';
+  };
+  const loader = new Promise((resolve, reject) => {
+    const bootstrap = `self.MonacoEnvironment = { baseUrl: '${CDN}/' }; importScripts('${CDN}/vs/base/worker/workerMain.js');`;
+    const workerUrl = URL.createObjectURL(new Blob([bootstrap], { type: 'text/javascript' }));
+    window.MonacoEnvironment = { getWorkerUrl: () => workerUrl };
+    window.addEventListener('pagehide', () => { editor?.dispose(); models.forEach(m => m.dispose()); URL.revokeObjectURL(workerUrl); });
+    const script = document.createElement('script');
+    script.src = CDN + '/vs/loader.js';
+    script.onerror = () => reject(new Error('Monaco CDN unreachable'));
+    script.onload = () => {
+      require.config({ paths: { vs: CDN + '/vs' } });
+      require(['vs/editor/editor.main'], resolve, reject);
+    };
+    document.head.appendChild(script);
+  });
+  loader.catch(fail);
+
+  function publish() {
+    if (changing) return;
+    send({ kind: 'invisible:change', state: {
+      files: Object.fromEntries([...models].map(([name, model]) => [name, model.getValue()])), activeFile,
+    }});
+  }
+  function select(name) {
+    if (!models.has(name)) return;
+    if (activeFile) views.set(activeFile, editor.saveViewState());
+    activeFile = name;
+    editor.setModel(models.get(name));
+    if (views.has(name)) editor.restoreViewState(views.get(name));
+    document.getElementById('files').value = name;
+    updateStatus();
+    publish();
+  }
+  function updateStatus() {
+    if (!editor?.getModel()) return;
+    const markers = monaco.editor.getModelMarkers({ resource: editor.getModel().uri });
+    const errors = markers.filter(m => m.severity === monaco.MarkerSeverity.Error).length;
+    status.textContent = errors ? `${errors} erreur${errors > 1 ? 's' : ''} · TypeScript` : 'TypeScript · prêt';
+  }
+  window.addEventListener('message', async event => {
+    if (event.source !== parent || event.origin !== origin || event.data?.kind !== 'invisible:init' || initialized) return;
+    initialized = true;
+    const timeout = setTimeout(() => {
+      status.hidden = false;
+      status.textContent = 'Chargement lent — vérifier l’accès à cdn.jsdelivr.net';
+    }, 20000);
+    try {
+      await loader;
+      const { files, types, entry, state } = event.data;
+      initialFiles = files;
+      const ts = monaco.languages.typescript;
+      ts.typescriptDefaults.setCompilerOptions({
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
+        jsx: ts.JsxEmit.ReactJSX,
+        strict: true, noEmit: true, skipLibCheck: true,
+        allowNonTsExtensions: true, esModuleInterop: true,
+        baseUrl: 'file:///',
+        paths: {
+          react: ['node_modules/@types/react/index.d.ts'],
+          'react/jsx-runtime': ['node_modules/@types/react/jsx-runtime.d.ts'],
+          csstype: ['node_modules/csstype/index.d.ts'],
+        },
+      });
+      ts.typescriptDefaults.setEagerModelSync(true);
+      ts.typescriptDefaults.setDiagnosticsOptions({ noSemanticValidation: false, noSyntaxValidation: false });
+      for (const [name, content] of Object.entries(types)) {
+        const path = name === 'csstype.d.ts' ? 'csstype/index.d.ts' : '@types/react/' + name;
+        ts.typescriptDefaults.addExtraLib(content, 'file:///node_modules/' + path);
+      }
+      monaco.editor.defineTheme('remi-dark', {
+        base: 'vs-dark', inherit: true,
+        rules: [
+          { token: 'comment', foreground: '90A1B9' },
+          { token: 'string', foreground: '5EEAD4' },
+          { token: 'keyword', foreground: 'C4B5FD' },
+          { token: 'number', foreground: 'FDBA74' },
+          { token: 'type.identifier', foreground: '5EEAD4' },
+        ],
+        colors: {
+          'editor.background': '#1D293D', 'editor.foreground': '#F1F5F9',
+          'editorLineNumber.foreground': '#62748E', 'editorLineNumber.activeForeground': '#90A1B9',
+          'editorCursor.foreground': '#2DD4BF', 'editor.selectionBackground': '#0F766E66',
+          'editor.lineHighlightBackground': '#253248', 'editorWidget.background': '#0F172B',
+          'editorWidget.border': '#45556C', 'editorSuggestWidget.selectedBackground': '#134E4A',
+          'editorHoverWidget.background': '#0F172B', 'editorHoverWidget.border': '#45556C',
+        },
+      });
+      const selector = document.getElementById('files');
+      const allFiles = { ...files, ...state?.files };
+      const ordered = [entry, ...Object.keys(allFiles).filter(n => n !== entry).sort()];
+      for (const name of ordered) {
+        const model = monaco.editor.createModel(allFiles[name], 'typescript', monaco.Uri.parse('file:///' + name));
+        models.set(name, model);
+        model.onDidChangeContent(publish);
+        const option = document.createElement('option');
+        option.value = option.textContent = name;
+        selector.appendChild(option);
+      }
+      document.getElementById('loading').remove();
+      editor = monaco.editor.create(document.getElementById('editor'), {
+        theme: 'remi-dark', model: null, automaticLayout: true,
+        fontSize: 32, lineHeight: 44, fontFamily: 'Menlo, Consolas, monospace',
+        padding: { top: 26, bottom: 20 }, minimap: { enabled: false },
+        lineNumbers: 'off', glyphMargin: false, folding: false,
+        scrollBeyondLastLine: false, tabSize: 2, wordWrap: 'off',
+        renderLineHighlight: 'none', overviewRulerLanes: 0, hideCursorInOverviewRuler: true,
+        scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
+        hover: { enabled: true, delay: 220, above: false },
+        suggestFontSize: 28, suggestLineHeight: 36,
+        quickSuggestions: { other: true, comments: false, strings: true },
+        suggest: { showWords: false }, parameterHints: { enabled: true },
+        fixedOverflowWidgets: true, ariaLabel: 'Code TypeScript modifiable',
+      });
+      editor.onDidFocusEditorWidget(() => {
+        escaping = false;
+        send({ kind: 'invisible:focus', focused: true });
+      });
+      editor.onDidBlurEditorWidget(() => {
+        if (!escaping) send({ kind: 'invisible:focus', focused: false });
+      });
+      select(state?.activeFile || entry);
+      // No auto-focus: arrows navigate the deck until the presenter clicks code.
+      selector.onchange = () => select(selector.value);
+      document.getElementById('complete').onmousedown = event => event.preventDefault();
+      document.getElementById('complete').onclick = () => { editor.focus(); editor.trigger('demo', 'editor.action.triggerSuggest', {}); };
+      document.getElementById('reset').onclick = () => {
+        changing = true;
+        for (const [name, model] of models) model.setValue(initialFiles[name] ?? '');
+        views.clear();
+        changing = false;
+        select(entry);
+        editor.setPosition({ lineNumber: 1, column: 1 });
+        editor.setScrollTop(0);
+        publish();
+      };
+      monaco.editor.onDidChangeMarkers(updateStatus);
+      // Warm up AND verify the real worker, not only the syntax highlighter.
+      const getWorker = await ts.getTypeScriptWorker();
+      const worker = await getWorker(editor.getModel().uri);
+      await worker.getSemanticDiagnostics(editor.getModel().uri.toString());
+      clearTimeout(timeout);
+      status.hidden = true;
+      updateStatus();
+    } catch (error) { clearTimeout(timeout); fail(error); }
+  });
+  send({ kind: 'invisible:ready' });
+})();
+</script>
+</body>
+</html>
