@@ -116,7 +116,7 @@
     }, 20000);
     try {
       await loader;
-      const { files, types, entry, state } = event.data;
+      const { files, types, entry, state, fontSize = 32 } = event.data;
       initialFiles = files;
       const ts = monaco.languages.typescript;
       ts.typescriptDefaults.setCompilerOptions({
@@ -171,7 +171,7 @@
       document.getElementById('loading').remove();
       editor = monaco.editor.create(document.getElementById('editor'), {
         theme: 'remi-dark', model: null, automaticLayout: true,
-        fontSize: 32, lineHeight: 44, fontFamily: 'Menlo, Consolas, monospace',
+        fontSize, lineHeight: Math.round(fontSize * 1.375), fontFamily: 'Menlo, Consolas, monospace',
         padding: { top: 26, bottom: 20 }, minimap: { enabled: false },
         lineNumbers: 'off', glyphMargin: false, folding: false,
         scrollBeyondLastLine: false, tabSize: 2, wordWrap: 'off',
