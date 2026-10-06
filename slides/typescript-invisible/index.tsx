@@ -385,7 +385,7 @@ const InferenceQuestion: Page = () => (
   </section>
 );
 
-const NaiveKeys: Page = () => <DemoPage id="keys-naive" avoid title="Accepter des clés inconnues" code={naiveKeys} entry="demo.ts" />;
+const NaiveKeys: Page = () => <DemoPage id="keys-naive" avoid title="Accepter n'importe quoi" code={naiveKeys} entry="demo.ts" />;
 const ExplicitKeys: Page = () => <DemoPage id="keys-explicit" avoid title="Déclarer les clés à la main" code={explicitKeys} entry="demo.ts" />;
 const InferredKeys: Page = () => <DemoPage id="keys-inferred" title="Utiliser la valeur fournie pour contraindre l'API" code={inferredKeys} entry="demo.ts" />;
 
@@ -455,23 +455,40 @@ function MethodArrow() {
 const InferenceMethod: Page = () => (
   <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
     <SectionLabel>CÔTÉ AUTEUR — CAPTURER</SectionLabel>
-    <div style={{ position: 'absolute', top: 350, left: 120, display: 'flex', alignItems: 'center', gap: 24 }}>
+    <div style={{ position: 'absolute', top: 350, left: 420, display: 'flex', alignItems: 'center', gap: 24 }}>
       <MethodStage label="Capturer" active>
         <path d="M54 24H24V54M126 24H156V54M24 126V156H54M156 126V156H126" />
         <rect x="62" y="62" width="56" height="56" rx="8" fill="currentColor" stroke="none" />
       </MethodStage>
       <MethodArrow />
-      <MethodStage label="Propager">
+      <MethodStage label="Exploiter">
         <rect x="18" y="70" width="40" height="40" rx="6" fill="currentColor" stroke="none" />
         <path d="M58 90H96M96 90V40H134M96 90V140H134" />
         <rect x="134" y="22" width="36" height="36" rx="6" />
         <rect x="134" y="122" width="36" height="36" rx="6" />
       </MethodStage>
-      <MethodArrow />
-      <MethodStage label="Contraindre">
-        <path d="M22 28H158L112 88V118H68V88Z" />
-        <path d="M68 150L84 166L116 134" />
+
+    </div>
+    <Footer />
+  </section>
+);
+
+const ExploitMethod: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>CÔTÉ AUTEUR — EXPLOITER</SectionLabel>
+    <div style={{ position: 'absolute', top: 350, left: 420, display: 'flex', alignItems: 'center', gap: 24 }}>
+      <MethodStage label="Capturer">
+        <path d="M54 24H24V54M126 24H156V54M24 126V156H54M156 126V156H126" />
+        <rect x="62" y="62" width="56" height="56" rx="8" fill="currentColor" stroke="none" />
       </MethodStage>
+      <MethodArrow />
+      <MethodStage label="Exploiter" active>
+        <rect x="18" y="70" width="40" height="40" rx="6" fill="currentColor" stroke="none" />
+        <path d="M58 90H96M96 90V40H134M96 90V140H134" />
+        <rect x="134" y="22" width="36" height="36" rx="6" />
+        <rect x="134" y="122" width="36" height="36" rx="6" />
+      </MethodStage>
+
     </div>
     <Footer />
   </section>
@@ -543,6 +560,70 @@ const CapturedLiteralsLive: Page = () => (
   </AuthorPage>
 );
 
+// Two supporting examples on the left, the TypeScript mechanic on the right.
+function ExploitPage({ title, tool, notation, children }: { title: string; tool: string; notation: string; children: ReactNode }) {
+  return (
+    <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+      <SectionLabel>CÔTÉ AUTEUR — EXPLOITER</SectionLabel>
+      <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>{title}</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '920px 700px', gap: 60, alignItems: 'center', height: 600, marginTop: 48 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>{children}</div>
+        <div style={{ padding: '40px 36px', border: '2px solid var(--osd-accent)', borderRadius: 'var(--osd-radius)', background: surface }}>
+          <h2 style={{ margin: 0, fontSize: 44, lineHeight: '60px', fontWeight: 650, color: 'var(--osd-accent)' }}>{tool}</h2>
+          <pre style={{ margin: '32px 0 0', fontFamily: 'monospace', fontSize: 36, lineHeight: '58px', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', color: 'var(--osd-text)' }}>{notation}</pre>
+        </div>
+      </div>
+      <Footer />
+    </section>
+  );
+}
+
+function TypeExample({ children, accent = false }: { children: ReactNode; accent?: boolean }) {
+  return <pre style={{ margin: 0, padding: '28px 32px', border: `1px solid ${border}`, borderRadius: 'var(--osd-radius)', background: surface, fontSize: 34, lineHeight: '54px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', color: accent ? 'var(--osd-accent)' : 'var(--osd-text)' }}>{children}</pre>;
+}
+
+function DerivationArrow() {
+  return <div aria-hidden="true" style={{ color: muted, fontSize: 40, lineHeight: '44px', textAlign: 'center' }}>↓</div>;
+}
+
+const ExploitKeys: Page = () => (
+  <ExploitPage title="Extraire les clés d’un objet" tool="keyof" notation="keyof T">
+    <TypeExample>{'{\n  welcome: "Bonjour {name} !",\n  goodbye: "À bientôt !"\n}'}</TypeExample>
+    <DerivationArrow />
+    <TypeExample accent>{'"welcome" | "goodbye"'}</TypeExample>
+  </ExploitPage>
+);
+
+const ExploitSelection: Page = () => (
+  <ExploitPage title="Accéder au type d’une propriété" tool="Types indexés" notation="T[K]">
+    <TypeExample>{'"welcome"\n→ "Bonjour {name} !"'}</TypeExample>
+    <TypeExample>{'"unread"\n→ "Vous avez {count} messages."'}</TypeExample>
+  </ExploitPage>
+);
+
+const ExploitText: Page = () => (
+  <ExploitPage title="Identifier des patterns dans les strings" tool="Template literal types + infer" notation={'`${string}{${infer Name}}${infer Rest}`'}>
+    <TypeExample>{'"Bonjour {name},\nvous avez {count} messages."'}</TypeExample>
+    <DerivationArrow />
+    <TypeExample accent>{'"name" | "count"'}</TypeExample>
+  </ExploitPage>
+);
+
+const ExploitShape: Page = () => (
+  <ExploitPage title="Construire un objet à partir d’une union" tool="Mapped types" notation="{ [P in Names]: Value }">
+    <TypeExample accent>{'"name" | "count"'}</TypeExample>
+    <DerivationArrow />
+    <TypeExample>{'{\n  name: string | number;\n  count: string | number;\n}'}</TypeExample>
+  </ExploitPage>
+);
+
+const ExploitArguments: Page = () => (
+  <ExploitPage title="Choisir un type selon une condition" tool="Types conditionnels" notation="T extends U ? A : B">
+    <TypeExample>{'// Aucun placeholder\nmessages.t("goodbye");'}</TypeExample>
+    <TypeExample>{'// Paramètres obligatoires\nmessages.t("welcome", { name: "Alice" });'}</TypeExample>
+  </ExploitPage>
+);
+
 export const transition: SlideTransition = {
   duration: 240,
   enter: { easing: 'cubic-bezier(0, 0, 0.2, 1)', keyframes: [{ opacity: 0 }, { opacity: 1 }] },
@@ -559,14 +640,20 @@ export const notes = [
   'On veut maintenant personnaliser les messages. Les clés restent inférées et vérifiées : essayer welcomme si nécessaire. Mais params est un dictionnaire optionnel. Les trois appels affichés compilent, même username et le paramètre absent. On sait quel message existe ; on ne sait pas encore ce qu’il attend. Les diagnostics sont réels, le code n’est pas exécuté. Échap rend le clavier à la présentation.',
   'Cette version de l’API accepte un contrat manuel : le générique décrit les paramètres par clé, et never signifie aucun paramètre. Survoler t. Dans le dernier appel, remplacer name par username pour voir l’erreur, puis retirer le deuxième argument. Restaurer name ou réinitialiser. Ça fonctionne, mais les noms des paramètres sont écrits à deux endroits. On utilise string | number : le nom count ne suffit pas à inférer un type numérique.',
   'On supprime la description manuelle : les messages définissent eux-mêmes leurs paramètres. Survoler les deux erreurs, corriger username avec l’autocomplétion, puis modifier {name} en {firstName} dans le dictionnaire. Cette fois, l’appel avec name devient invalide et firstName est suggéré. Comme pour les clés, les types sont déduits du dictionnaire. Ici, on extrait les noms entre accolades dans les strings, sans type explicite ni as const côté consommateur.',
-  'Pour obtenir ce comportement, createMessages doit conserver les types littéraux des messages, en déduire les paramètres et vérifier les appels. Ce sont les trois étapes indiquées ici : capturer, propager, contraindre. L’implémentation cible est disponible dans le fichier assets/create-messages.ts du deck, avec les versions loose et manual.',
-  'Trois étapes pour concevoir une API qui exploite l’inférence : capturer l’information depuis les valeurs, la propager dans les types, puis contraindre les appels avec le contrat obtenu. On commence par capturer.',
+  'Pour obtenir ce comportement, createMessages doit conserver les types littéraux des messages, en déduire les paramètres et vérifier les appels. Deux étapes permettent de concevoir cette API : capturer l’information, puis l’exploiter pour définir les appels autorisés. L’implémentation cible est disponible dans le fichier assets/create-messages.ts du deck, avec les versions loose et manual.',
+  'Deux étapes : capturer l’information depuis les valeurs, puis l’exploiter pour dériver le contrat de notre API. Pas besoin de retenir une implémentation : le but est de reconnaître les outils utiles et les relations à demander à un agent. On commence par capturer.',
   'Commençons par une signature plausible : un dictionnaire de chaînes. Le consommateur passe bien welcome et goodbye, avec le texte Bonjour {name} !. Mais à l’intérieur de la fonction, dictionary est seulement un Record<string, string>. keyof typeof dictionary vaut string, et le message welcome est typé string. La valeur à l’exécution n’a pas changé : c’est la signature qui ne conserve pas ses détails. On ne peut pas construire notre contrat précis à partir de ce seul type. createDictionary renvoie le dictionnaire pour rendre son type observable. Survoler la constante dictionary : les clés et les valeurs exactes ont été effacées par l’annotation.',
   'On remplace l’annotation générale par un paramètre de type T. extends impose toujours un dictionnaire de chaînes, mais T est inféré depuis l’objet reçu. Pour cet objet passé directement à createDictionary, les clés sont maintenant welcome et goodbye. Survoler la constante dictionary pour voir les propriétés inférées. En revanche, T["welcome"] reste string : les propriétés de cet objet peuvent être modifiées, donc leur texte est élargi. On a récupéré les clés, pas encore le nom du paramètre. Le consommateur n’a rien changé et n’a écrit aucun générique.',
   'On ajoute const devant T : les types affichés au survol viennent du vrai service TypeScript de Monaco. Ce modificateur conserve les valeurs littérales de l’objet passé directement à la fonction, sans as const côté consommateur ; il ne gèle pas l’objet à l’exécution et ne récupère pas une valeur déjà élargie en string. Cette fonction renvoie uniquement le dictionnaire pour rendre T observable, elle ne remplace pas notre API complète. Survoler la constante dictionary : son type révèle les clés welcome et goodbye ainsi que leurs valeurs littérales, dont "Bonjour {name} !". createDictionary distingue cette démonstration de l’API createMessages de la première partie. Retirer const devant T dans l’éditeur, puis refaire les survols : les clés restent connues, mais welcome devient string. Restaurer const ou utiliser Réinitialiser. Les changements restent propres à cette page. Échap rend le clavier à la présentation. Monaco nécessite un accès à cdn.jsdelivr.net.',
+  'L’information est capturée. Passons à Exploiter : utiliser les clés et les textes conservés pour déduire les appels autorisés.',
+  'Nous avons capturé les détails du dictionnaire. Maintenant, exploitons-les. keyof transforme les clés de son type en choix possibles pour messages.t. Retenir la possibilité, pas une signature : demandez à votre agent de dériver les choix autorisés depuis les données plutôt que de maintenir une liste parallèle.',
+  'Le choix de welcome nous donne le texte de welcome, pas un texte quelconque du catalogue. L’outil est un type indexé, T[K]. Cette relation permettra de demander name pour welcome et count pour unread. Même mécanique pour un nom d’événement et son payload : les arguments ne sont pas indépendants.',
+  'Puisque le texte exact a été conservé, TypeScript peut reconnaître les accolades et en extraire les noms. Les outils à connaître sont les template literal types et infer. On peut répéter cette extraction pour plusieurs placeholders ; inutile de détailler la récursion ici. Cela fonctionne sur une chaîne littérale connue, pas sur un simple string obtenu à l’exécution. Même idée avec les paramètres d’un chemin de route.',
+  'Un mapped type transforme chaque nom extrait en propriété attendue. On obtient la forme du paramètre sans la déclarer une seconde fois. Attention : count ne veut pas automatiquement dire number. Accepter string ou number est ici notre décision de conception, pas une information déduite du nom.',
+  'Dernière adaptation : aucun placeholder, aucun argument de paramètres ; des placeholders, un objet obligatoire. Les types conditionnels permettent ce choix. never représente ici l’absence de noms extraits, pas un paramètre à fournir. Le modèle mental est : données, choix possibles, information sélectionnée, contrat dérivé. Vous pouvez décrire cette chaîne à un agent sans mémoriser la syntaxe. Si le temps le permet, revenir à la démo consommateur et remplacer name par firstName pour montrer que tout suit.',
 ];
 export const meta: SlideMeta = {
-  title: 'Rendre TypeScript invisible — Ça ressemble à quoi ?',
+  title: 'Rendre TypeScript invisible',
   createdAt: '2026-10-02T08:39:03.778Z',
 };
-export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive] satisfies Page[];
+export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments] satisfies Page[];
