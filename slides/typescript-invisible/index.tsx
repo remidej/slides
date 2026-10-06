@@ -94,18 +94,7 @@ messages.t("welcome", { name: "Alice" });     // ✅ accepté
 messages.t("welcome", { username: "Alice" }); // ✅ rejeté
 messages.t("welcome");                        // ✅ rejeté
 messages.t("goodbye");                        // ✅ accepté`;
-const react = `import { messages } from "./messages";
-
-const Welcome = () => (
-  <messages.Text
-    name="welcome"
-    params={{ name: <strong>Alice</strong> }}
-  />
-); // ✅ accepté
-
-const Missing = () => <messages.Text name="welcome" />; // ✅ rejeté`;
-
-type DemoId = 'age-annotated' | 'age-inferred' | 'keys-naive' | 'keys-explicit' | 'keys-inferred' | 'loose' | 'manual' | 'authority' | 'inferred' | 'react';
+type DemoId = 'age-annotated' | 'age-inferred' | 'keys-naive' | 'keys-explicit' | 'keys-inferred' | 'loose' | 'manual' | 'authority' | 'inferred';
 type DemoState = { files: Record<string, string>; activeFile: string };
 // Live changes survive page navigation, but never write to the source files.
 const sessions = new Map<DemoId, DemoState>();
@@ -392,7 +381,6 @@ const LooseParams: Page = () => <DemoPage id="loose" title="Et si on personnalis
 const ManualParams: Page = () => <DemoPage id="manual" title="Décrire les paramètres à la main" code={manual} entry="demo.ts" />;
 const Authority: Page = () => <DemoPage id="authority" title="Quel contrat fait autorité ?" code={manual} entry="demo.ts" label="LES PARAMÈTRES · À L’ÉPREUVE DU CHANGEMENT" />;
 const InferredParams: Page = () => <DemoPage id="inferred" title="Déduire plutôt que déclarer" code={inferred} entry="demo.ts" />;
-const ReactDemo: Page = () => <DemoPage id="react" title="Et ça suit jusque dans React" code={react} entry="usage.tsx" label="UN CONTRAT · PLUSIEURS USAGES" />;
 
 const UnderTheHood: Page = () => (
   <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
@@ -420,11 +408,10 @@ export const notes = [
   'Cette version de l’API accepte un contrat manuel : le générique décrit les paramètres par clé, et never signifie aucun paramètre. Survoler t. Dans le dernier appel, remplacer name par username pour voir l’erreur, puis retirer le deuxième argument. Restaurer name ou réinitialiser. Ça fonctionne, mais les noms des paramètres sont écrits à deux endroits. On utilise string | number : le nom count ne suffit pas à inférer un type numérique.',
   'Démo live : cette page démarre volontairement sans divergence et sans erreur. Modifier uniquement Bonjour {name} en Bonjour {firstName} dans le dictionnaire, sans toucher au type ni à l’appel. Le dernier appel reste accepté. Le compilateur fait confiance à mon type, mais mon type n’est plus d’accord avec mon message. Le runtime laisserait ici {firstName} non remplacé. Les modifications restent propres à cette page ; Réinitialiser restaure le point de départ.',
   'On supprime la description manuelle : les messages définissent eux-mêmes leurs paramètres. Survoler les deux erreurs, corriger username avec l’autocomplétion, puis modifier {name} en {firstName} dans le dictionnaire. Cette fois, l’appel avec name devient invalide et firstName est suggéré. Même principe que pour les clés, sauf qu’on extrait maintenant l’information à l’intérieur des strings. Aucun type explicite, aucun as const côté consommateur.',
-  'Le même dictionnaire pilote aussi les props React : les noms requis restent identiques, mais les valeurs peuvent être des éléments React. Survoler l’erreur : params reste obligatoire. Dans cette démo indépendante, le dictionnaire initial utilise name. Il est modifiable dans messages.ts via le sélecteur. Les éditeurs nécessitent un accès à cdn.jsdelivr.net.',
   'Les types n’ont pas disparu : leur complexité a été déplacée derrière l’API. Passons côté auteur. Il faut capturer les valeurs sans perdre les littéraux, propager cette information jusqu’aux paramètres, puis contraindre les appels. L’implémentation cible est disponible dans create-messages.ts ; les versions loose et manual sont aussi consultables dans les éditeurs.',
 ];
 export const meta: SlideMeta = {
   title: 'Rendre TypeScript invisible — Ça ressemble à quoi ?',
   createdAt: '2026-10-02T08:39:03.778Z',
 };
-export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, Authority, InferredParams, ReactDemo, UnderTheHood] satisfies Page[];
+export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, Authority, InferredParams, UnderTheHood] satisfies Page[];

@@ -1,5 +1,3 @@
-import { createElement, Fragment, type ReactNode } from "react";
-
 // La version cible, côté auteur. Les pages ne montrent que sa consommation.
 // Ajouter ensuite create-messages-1.ts, create-messages-2.ts, etc. dans assets/.
 // Tous ces fichiers seront chargés dans le même projet TypeScript virtuel.
@@ -17,14 +15,6 @@ type Arguments<S extends string> =
     ? []
     : [params: Values<S, string | number>];
 
-type TextProps<M extends Record<string, string>> = {
-  [K in keyof M]: { name: K } & (
-    [Placeholders<M[K]>] extends [never]
-      ? { params?: never }
-      : { params: Values<M[K], ReactNode> }
-  );
-}[keyof M];
-
 export function createMessages<const M extends Record<string, string>>(dictionary: M) {
   function t<const K extends string>(
     key: K & keyof M,
@@ -36,15 +26,5 @@ export function createMessages<const M extends Record<string, string>>(dictionar
     );
   }
 
-  function Text(props: TextProps<M>) {
-    const { name, params } = props;
-    const parts = dictionary[name].split(/\{([^{}]+)\}/g);
-    return createElement(Fragment, null, ...parts.map((part, i) =>
-      i % 2 === 0 ? part : createElement(Fragment, { key: i },
-        (params as Record<string, ReactNode> | undefined)?.[part] ?? `{${part}}`,
-      ),
-    ));
-  }
-
-  return { t, Text };
+  return { t };
 }
