@@ -202,8 +202,8 @@ function DemoPage({ id, title, code, entry, avoid = false }: { id: DemoId; title
         <span style={{ color: 'var(--osd-accent)' }}>CÔTÉ UTILISATEUR</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginTop: 32, minHeight: 60 }}>
-        <span style={{ display: 'inline-block', flexShrink: 0, padding: '6px 18px', background: avoid ? '#fb923c' : 'var(--osd-accent)', color: avoid ? '#431407' : '#042f2e', borderRadius: 6, fontSize: 28, lineHeight: '38px', fontWeight: 700, letterSpacing: '0.04em', transform: 'rotate(-4deg)', boxShadow: '0 5px 12px #00000030' }}>{avoid ? 'À ÉVITER' : 'SOLUTION'}</span>
-        <p style={{ margin: 0, fontSize: 40, lineHeight: '60px', color: 'var(--osd-text)' }}>{title}</p>
+        <span style={{ display: 'inline-block', flexShrink: 0, padding: '6px 18px', background: avoid ? '#fb923c' : 'var(--osd-accent)', color: avoid ? '#431407' : '#042f2e', borderRadius: 6, fontSize: 28, lineHeight: '38px', fontWeight: 700, letterSpacing: '0.04em', transform: 'rotate(-4deg)', boxShadow: '0 5px 12px #00000030' }}>{avoid ? 'À ÉVITER' : 'À FAIRE'}</span>
+        <p style={{ margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 44, lineHeight: '60px', fontWeight: 650, letterSpacing: '-0.02em', color: 'var(--osd-text)' }}>{title}</p>
       </div>
       <div style={{ marginTop: 32 }}>
         <Editor id={id} code={code} entry={entry} height={620} />
@@ -385,9 +385,9 @@ const InferenceQuestion: Page = () => (
   </section>
 );
 
-const NaiveKeys: Page = () => <DemoPage id="keys-naive" avoid title="Des clés inconnues sont acceptées" code={naiveKeys} entry="demo.ts" />;
+const NaiveKeys: Page = () => <DemoPage id="keys-naive" avoid title="Accepter des clés inconnues" code={naiveKeys} entry="demo.ts" />;
 const ExplicitKeys: Page = () => <DemoPage id="keys-explicit" avoid title="Déclarer les clés à la main" code={explicitKeys} entry="demo.ts" />;
-const InferredKeys: Page = () => <DemoPage id="keys-inferred" title="Utiliser le dictionnaire fourni pour contraindre l'API" code={inferredKeys} entry="demo.ts" />;
+const InferredKeys: Page = () => <DemoPage id="keys-inferred" title="Utiliser la valeur fournie pour contraindre l'API" code={inferredKeys} entry="demo.ts" />;
 
 const OneSource: Page = () => (
   <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
@@ -477,13 +477,15 @@ const InferenceMethod: Page = () => (
   </section>
 );
 
-function AuthorPage({ title, children, takeaway, live = false }: { title: ReactNode; children: ReactNode; takeaway: ReactNode; live?: boolean }) {
+function AuthorPage({ title, children, avoid = false }: { title: ReactNode; children: ReactNode; avoid?: boolean }) {
   return (
     <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
       <div style={{ fontSize: 24, lineHeight: '30px', color: 'var(--osd-accent)', letterSpacing: '0.09em' }}>CÔTÉ AUTEUR — CAPTURER</div>
-      <h1 style={{ fontFamily: 'var(--osd-font-display)', fontSize: 78, lineHeight: '94px', fontWeight: 650, letterSpacing: '-0.035em', margin: '24px 0 32px' }}>{title}</h1>
-      {children}
-      <p style={{ fontSize: 40, lineHeight: '60px', color: live ? '#ffffff' : muted, margin: live ? '24px 0 0' : '48px 0 0' }}>{takeaway}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginTop: 32, minHeight: 60 }}>
+        <span style={{ display: 'inline-block', flexShrink: 0, padding: '6px 18px', background: avoid ? '#fb923c' : 'var(--osd-accent)', color: avoid ? '#431407' : '#042f2e', borderRadius: 6, fontSize: 28, lineHeight: '38px', fontWeight: 700, letterSpacing: '0.04em', transform: 'rotate(-4deg)', boxShadow: '0 5px 12px #00000030' }}>{avoid ? 'À ÉVITER' : 'À FAIRE'}</span>
+        <h1 style={{ margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 44, lineHeight: '60px', fontWeight: 650, letterSpacing: '-0.02em', color: 'var(--osd-text)' }}>{title}</h1>
+      </div>
+      <div style={{ marginTop: 32 }}>{children}</div>
       <Footer />
     </section>
   );
@@ -491,7 +493,9 @@ function AuthorPage({ title, children, takeaway, live = false }: { title: ReactN
 
 const erasedInformationDemo = `function createDictionary(
   dictionary: Record<string, string>
-) { return dictionary; }
+) {
+  return dictionary;
+}
 
 const dictionary = createDictionary({
   welcome: "Bonjour {name} !",
@@ -499,9 +503,10 @@ const dictionary = createDictionary({
 });`;
 
 const capturedKeysDemo = `function createDictionary<
-  T extends
-    Record<string, string>
->(dictionary: T) { return dictionary; }
+  T extends Record<string, string>
+>(dictionary: T) {
+  return dictionary;
+}
 
 const dictionary = createDictionary({
   welcome: "Bonjour {name} !",
@@ -509,22 +514,23 @@ const dictionary = createDictionary({
 });`;
 
 const ErasedInformation: Page = () => (
-  <AuthorPage live title="Ne surtout pas perdre l'information" takeaway={<>Une annotation <code>Record&lt;string, string&gt;</code> efface les clés et les valeurs exactes.</>}>
-    <Editor id="capture-erased" code={erasedInformationDemo} entry="capture.ts" height={540} fontSize={32} standalone />
+  <AuthorPage avoid title="Perdre l’information avec une annotation trop large">
+    <Editor id="capture-erased" code={erasedInformationDemo} entry="capture.ts" height={620} fontSize={32} standalone />
   </AuthorPage>
 );
 
 const CapturedKeys: Page = () => (
-  <AuthorPage live title="Conserver les clés" takeaway={<>Un générique <code>T</code> capture les clés ; les valeurs restent des <code>string</code>.</>}>
-    <Editor id="capture-keys" code={capturedKeysDemo} entry="capture.ts" height={540} fontSize={32} standalone />
+  <AuthorPage title={<>Conserver les clés avec un générique <code>T</code></>}>
+    <Editor id="capture-keys" code={capturedKeysDemo} entry="capture.ts" height={620} fontSize={32} standalone />
   </AuthorPage>
 );
 
 // Return the dictionary only to inspect the captured T; this is not the full API.
 const captureLiteralsDemo = `function createDictionary<
-  const T extends
-    Record<string, string>
->(dictionary: T) { return dictionary; }
+  const T extends Record<string, string>
+>(dictionary: T) {
+  return dictionary;
+}
 
 const dictionary = createDictionary({
   welcome: "Bonjour {name} !",
@@ -532,8 +538,8 @@ const dictionary = createDictionary({
 });`;
 
 const CapturedLiteralsLive: Page = () => (
-  <AuthorPage live title="Conserver les valeurs" takeaway={<>Un générique capture les clés ; <code>const</code> préserve les valeurs littérales.</>}>
-    <Editor id="capture-literals" code={captureLiteralsDemo} entry="capture.ts" height={540} fontSize={32} standalone />
+  <AuthorPage title={<>Conserver les valeurs littérales avec <code>const T</code></>}>
+    <Editor id="capture-literals" code={captureLiteralsDemo} entry="capture.ts" height={620} fontSize={32} standalone />
   </AuthorPage>
 );
 
