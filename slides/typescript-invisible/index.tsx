@@ -915,6 +915,36 @@ const ClosingBento: Page = () => (
   </section>
 );
 
+const Autopromo: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '160px 120px 100px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>AUTOPROMO</SectionLabel>
+    <div style={{ display: 'grid', gridTemplateColumns: '960px 640px', gap: 80, alignItems: 'center', height: 720 }}>
+      <div style={{ padding: 48, background: surface, border: `2px solid color-mix(in oklch, ${border} 70%, ${muted})`, borderRadius: 24 }}>
+        <h1 style={{ margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 80, lineHeight: '96px', fontWeight: 650, letterSpacing: '-0.035em' }}>Camox</h1>
+        <p style={{ margin: '32px 0 48px', fontSize: 44, lineHeight: '64px', color: muted }}>Un framework pour créer des sites<br />éditables avec vos agents.</p>
+        <a href="https://camox.dev" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--osd-accent)', textDecoration: 'none', fontSize: 48, lineHeight: '64px' }}>camox.dev</a>
+      </div>
+      <div style={{ paddingLeft: 64 }}>
+        <h2 style={{ margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 56, lineHeight: '72px', fontWeight: 650, letterSpacing: '-0.025em' }}>Freelance</h2>
+        <p style={{ margin: '28px 0 40px', fontSize: 36, lineHeight: '56px', color: muted }}>developer experience,<br />agent tooling,<br />product engineering</p>
+        <a href="mailto:remidejuvigny@gmail.com" style={{ color: 'var(--osd-text)', textDecoration: 'none', fontSize: 32, lineHeight: '48px' }}>remidejuvigny@gmail.com</a>
+      </div>
+    </div>
+    <Footer />
+  </section>
+);
+
+const Thanks: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-display)' }}>
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <ClosingBento />
+    </div>
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(ellipse at center, var(--osd-bg) 0%, var(--osd-bg) 24%, color-mix(in oklch, var(--osd-bg) 75%, transparent) 46%, color-mix(in oklch, var(--osd-bg) 35%, transparent) 75%, color-mix(in oklch, var(--osd-bg) 25%, transparent) 100%)' }}>
+      <h1 style={{ margin: 0, fontSize: 152, lineHeight: '180px', fontWeight: 650, letterSpacing: '-0.045em', textShadow: '0 4px 32px var(--osd-bg)' }}>Merci</h1>
+    </div>
+  </section>
+);
+
 export const transition: SlideTransition = {
   duration: 240,
   enter: { easing: 'cubic-bezier(0, 0, 0.2, 1)', keyframes: [{ opacity: 0 }, { opacity: 1 }] },
@@ -955,4 +985,4 @@ export const meta: SlideMeta = {
   title: 'Rendre TypeScript invisible',
   createdAt: '2026-10-02T08:39:03.778Z',
 };
-export default [Intro, InferenceSection, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, DesignForInference, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive, InvisibleMeme, EncapsulatedComplexity, AgentImplementation, TestTheTypes, DifferentiatingDx, ClosingBento] satisfies Page[];
+export default [Intro, InferenceSection, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, DesignForInference, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive, InvisibleMeme, EncapsulatedComplexity, AgentImplementation, TestTheTypes, DifferentiatingDx, Autopromo, Thanks, ClosingBento] satisfies Page[];
