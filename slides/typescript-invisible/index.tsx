@@ -94,12 +94,12 @@ messages.t("welcome", { name: "Alice" });     // ✅ accepté
 messages.t("welcome", { username: "Alice" }); // ✅ rejeté
 messages.t("welcome");                        // ✅ rejeté
 messages.t("goodbye");                        // ✅ accepté`;
-type DemoId = 'age-annotated' | 'age-inferred' | 'keys-naive' | 'keys-explicit' | 'keys-inferred' | 'loose' | 'manual' | 'authority' | 'inferred' | 'capture-erased' | 'capture-keys' | 'capture-literals';
+type DemoId = 'age-annotated' | 'age-inferred' | 'keys-naive' | 'keys-explicit' | 'keys-inferred' | 'loose' | 'manual' | 'authority' | 'inferred' | 'capture-erased' | 'capture-keys' | 'capture-literals' | 'assembled-live';
 type DemoState = { files: Record<string, string>; activeFile: string };
 // Live changes survive page navigation, but never write to the source files.
 const sessions = new Map<DemoId, DemoState>();
 
-function Editor({ id, code, entry, height = 682, fontSize = 32, standalone = false }: { id: DemoId; code: string; entry: string; height?: number; fontSize?: number; standalone?: boolean }) {
+function Editor({ id, code, entry, height = 682, fontSize = 32, standalone = false, foldRegions = false }: { id: DemoId; code: string; entry: string; height?: number; fontSize?: number; standalone?: boolean; foldRegions?: boolean }) {
   const active = useIsActivePage();
   const frame = useRef<HTMLIFrameElement>(null);
   const focusTarget = useRef<HTMLDivElement>(null);
@@ -139,7 +139,7 @@ function Editor({ id, code, entry, height = 682, fontSize = 32, standalone = fal
           ? { [entry]: code }
           : { ...sources, 'messages.ts': dictionary, [entry]: code };
         frame.current.contentWindow?.postMessage({
-          kind: 'invisible:init', files, types, entry, fontSize,
+          kind: 'invisible:init', files, types, entry, fontSize, foldRegions,
           state: sessions.get(id),
         }, window.location.origin);
       }
@@ -167,7 +167,7 @@ function Editor({ id, code, entry, height = 682, fontSize = 32, standalone = fal
       window.removeEventListener('keyup', onKeyUp, true);
       document.removeEventListener('fullscreenchange', syncKeyboard);
     };
-  }, [active, id, code, entry, fontSize, standalone]);
+  }, [active, id, code, entry, fontSize, standalone, foldRegions]);
   return (
     <div ref={focusTarget} tabIndex={-1} style={{ outline: 'none', height, border: `1px solid ${border}`, borderRadius: 'var(--osd-radius)', background: surface, boxShadow: '0 24px 70px #00000020' }}>
       {active ? (
@@ -175,7 +175,7 @@ function Editor({ id, code, entry, height = 682, fontSize = 32, standalone = fal
           style={{ display: 'block', width: '100%', height: '100%', border: 0, borderRadius: 'var(--osd-radius)' }} />
       ) : (
         <>
-          <pre style={{ margin: 0, padding: '30px 36px', fontSize, lineHeight: `${Math.round(fontSize * 1.375)}px`, color: 'var(--osd-text)', fontFamily: 'Menlo, Consolas, monospace', whiteSpace: 'pre-wrap' }}>{code}</pre>
+          <pre style={{ margin: 0, padding: '30px 36px', fontSize, lineHeight: `${Math.round(fontSize * 1.375)}px`, color: 'var(--osd-text)', fontFamily: 'Menlo, Consolas, monospace', whiteSpace: 'pre-wrap' }}>{foldRegions ? code.replace(/\/\/ #region ([^\n]*)\n[\s\S]*?\/\/ #endregion/g, '// $1 …') : code}</pre>
         </>
       )}
     </div>
@@ -454,7 +454,7 @@ function MethodArrow() {
 
 const InferenceMethod: Page = () => (
   <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
-    <SectionLabel>CÔTÉ AUTEUR — CAPTURER</SectionLabel>
+    <SectionLabel>CÔTÉ AUTEUR</SectionLabel>
     <div style={{ position: 'absolute', top: 350, left: 420, display: 'flex', alignItems: 'center', gap: 24 }}>
       <MethodStage label="Capturer" active>
         <path d="M54 24H24V54M126 24H156V54M24 126V156H54M156 126V156H126" />
@@ -475,7 +475,7 @@ const InferenceMethod: Page = () => (
 
 const ExploitMethod: Page = () => (
   <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
-    <SectionLabel>CÔTÉ AUTEUR — EXPLOITER</SectionLabel>
+    <SectionLabel>CÔTÉ AUTEUR</SectionLabel>
     <div style={{ position: 'absolute', top: 350, left: 420, display: 'flex', alignItems: 'center', gap: 24 }}>
       <MethodStage label="Capturer">
         <path d="M54 24H24V54M126 24H156V54M24 126V156H54M156 126V156H126" />
@@ -497,7 +497,7 @@ const ExploitMethod: Page = () => (
 function AuthorPage({ title, children, avoid = false }: { title: ReactNode; children: ReactNode; avoid?: boolean }) {
   return (
     <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
-      <div style={{ fontSize: 24, lineHeight: '30px', color: 'var(--osd-accent)', letterSpacing: '0.09em' }}>CÔTÉ AUTEUR — CAPTURER</div>
+      <div style={{ fontSize: 24, lineHeight: '30px', color: 'var(--osd-accent)', letterSpacing: '0.09em' }}>CÔTÉ AUTEUR</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginTop: 32, minHeight: 60 }}>
         <span style={{ display: 'inline-block', flexShrink: 0, padding: '6px 18px', background: avoid ? '#fb923c' : 'var(--osd-accent)', color: avoid ? '#431407' : '#042f2e', borderRadius: 6, fontSize: 28, lineHeight: '38px', fontWeight: 700, letterSpacing: '0.04em', transform: 'rotate(-4deg)', boxShadow: '0 5px 12px #00000030' }}>{avoid ? 'À ÉVITER' : 'À FAIRE'}</span>
         <h1 style={{ margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 44, lineHeight: '60px', fontWeight: 650, letterSpacing: '-0.02em', color: 'var(--osd-text)' }}>{title}</h1>
@@ -564,7 +564,7 @@ const CapturedLiteralsLive: Page = () => (
 function ExploitPage({ title, tool, notation, children }: { title: string; tool: string; notation: string; children: ReactNode }) {
   return (
     <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
-      <SectionLabel>CÔTÉ AUTEUR — EXPLOITER</SectionLabel>
+      <SectionLabel>CÔTÉ AUTEUR</SectionLabel>
       <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>{title}</h1>
       <div style={{ display: 'grid', gridTemplateColumns: '920px 700px', gap: 60, alignItems: 'center', height: 600, marginTop: 48 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>{children}</div>
@@ -624,6 +624,25 @@ const ExploitArguments: Page = () => (
   </ExploitPage>
 );
 
+// Same source as the consumer demo, with presentation-only region markers and line breaks.
+const assembledLiveCode = sources['create-messages.ts']
+  .replace(/^[\s\S]*?(?=type Placeholders)/, '// #region Types utilitaires\n')
+  .replace('export function createMessages', '// #endregion\n\nexport function createMessages')
+  .replace('createMessages<const M extends Record<string, string>>(dictionary: M)', 'createMessages<\n  const M extends Record<string, string>\n>(dictionary: M)')
+  .replace('    const params =', '    // #region Remplacement des placeholders\n    const params =')
+  .replace('    );\n  }', '    );\n    // #endregion\n  }');
+
+const AssembledContractLive: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>CÔTÉ AUTEUR</SectionLabel>
+    <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>Assembler le contrat de l’API</h1>
+    <div style={{ marginTop: 32 }}>
+      <Editor id="assembled-live" code={assembledLiveCode} entry="create-messages.ts" height={680} fontSize={30} standalone foldRegions />
+    </div>
+    <Footer />
+  </section>
+);
+
 export const transition: SlideTransition = {
   duration: 240,
   enter: { easing: 'cubic-bezier(0, 0, 0.2, 1)', keyframes: [{ opacity: 0 }, { opacity: 1 }] },
@@ -651,9 +670,10 @@ export const notes = [
   'Puisque le texte exact a été conservé, TypeScript peut reconnaître les accolades et en extraire les noms. Les outils à connaître sont les template literal types et infer. On peut répéter cette extraction pour plusieurs placeholders ; inutile de détailler la récursion ici. Cela fonctionne sur une chaîne littérale connue, pas sur un simple string obtenu à l’exécution. Même idée avec les paramètres d’un chemin de route.',
   'Un mapped type transforme chaque nom extrait en propriété attendue. On obtient la forme du paramètre sans la déclarer une seconde fois. Attention : count ne veut pas automatiquement dire number. Accepter string ou number est ici notre décision de conception, pas une information déduite du nom.',
   'Dernière adaptation : aucun placeholder, aucun argument de paramètres ; des placeholders, un objet obligatoire. Les types conditionnels permettent ce choix. never représente ici l’absence de noms extraits, pas un paramètre à fournir. Le modèle mental est : données, choix possibles, information sélectionnée, contrat dérivé. Vous pouvez décrire cette chaîne à un agent sans mémoriser la syntaxe. Si le temps le permet, revenir à la démo consommateur et remplacer name par firstName pour montrer que tout suit.',
+  'Voici comment les outils se rejoignent pour définir le contrat de notre API. Les types déduits deviennent les types des paramètres : TypeScript vérifie alors les appels, sans validation à l’exécution. Pas besoin de retenir chaque symbole de cette signature. Le code provient directement de assets/create-messages.ts ; seules des régions de repli et des coupures de ligne sont ajoutées. Les utilitaires et le remplacement runtime sont repliés au départ. Montrer const M, key: K & keyof M, puis Arguments<M[K]>. Survoler les types ou déplier les régions avec les chevrons si utile. Réinitialiser restaure le code et les replis ; Échap rend le clavier à la présentation.',
 ];
 export const meta: SlideMeta = {
   title: 'Rendre TypeScript invisible',
   createdAt: '2026-10-02T08:39:03.778Z',
 };
-export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments] satisfies Page[];
+export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive] satisfies Page[];

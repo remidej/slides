@@ -108,7 +108,7 @@
     }, 20000);
     try {
       await loader;
-      const { files, types, entry, state, fontSize = 32 } = event.data;
+      const { files, types, entry, state, fontSize = 32, foldRegions = false } = event.data;
       initialFiles = files;
       const ts = monaco.languages.typescript;
       ts.typescriptDefaults.setCompilerOptions({
@@ -161,7 +161,8 @@
         theme: 'remi-dark', model: null, automaticLayout: true,
         fontSize, lineHeight: Math.round(fontSize * 1.375), fontFamily: 'Menlo, Consolas, monospace',
         padding: { top: 26, bottom: 20 }, minimap: { enabled: false },
-        lineNumbers: 'off', glyphMargin: false, folding: false,
+        lineNumbers: 'off', glyphMargin: false, folding: foldRegions,
+        showFoldingControls: foldRegions ? 'always' : 'mouseover',
         scrollBeyondLastLine: false, tabSize: 2, wordWrap: 'off',
         renderLineHighlight: 'none', overviewRulerLanes: 0, hideCursorInOverviewRuler: true,
         scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
@@ -178,16 +179,24 @@
       editor.onDidBlurEditorWidget(() => {
         if (!escaping) send({ kind: 'invisible:focus', focused: false });
       });
+      const foldInitialRegions = async () => {
+        if (!foldRegions) return;
+        await editor.getAction('editor.foldAllMarkerRegions')?.run();
+        editor.setPosition({ lineNumber: 1, column: 1 });
+        editor.setScrollTop(0);
+      };
       select(state?.activeFile || entry);
+      await foldInitialRegions();
       // No auto-focus: arrows navigate the deck until the presenter clicks code.
       document.getElementById('complete').onmousedown = event => event.preventDefault();
       document.getElementById('complete').onclick = () => { editor.focus(); editor.trigger('demo', 'editor.action.triggerSuggest', {}); };
-      document.getElementById('reset').onclick = () => {
+      document.getElementById('reset').onclick = async () => {
         changing = true;
         for (const [name, model] of models) model.setValue(initialFiles[name] ?? '');
         views.clear();
         changing = false;
         select(entry);
+        await foldInitialRegions();
         editor.setPosition({ lineNumber: 1, column: 1 });
         editor.setScrollTop(0);
         publish();
