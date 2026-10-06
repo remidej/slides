@@ -7,29 +7,22 @@
   :root { color-scheme: dark; --bg: oklch(27.9% .041 260.031); --text: oklch(96.8% .007 247.896); --muted: oklch(70.4% .04 256.788); --line: oklch(37.2% .044 257.287); --accent: oklch(77.7% .152 181.912); }
   * { box-sizing: border-box; }
   html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font: 24px Inter, sans-serif; }
-  body { display: grid; grid-template-rows: 60px 1fr; }
-  header { display: flex; align-items: center; gap: 20px; padding: 0 24px; border-bottom: 1px solid var(--line); }
-  .ts { color: var(--accent); font: 700 22px monospace; }
-  select, button { background: transparent; color: var(--text); font: inherit; border: 0; border-radius: 6px; padding: 5px 12px; }
-  select { min-width: 290px; color: var(--accent); font-family: monospace; }
-  option { background: #1d293d; }
-  button { cursor: pointer; font-size: 22px; opacity: 0; pointer-events: none; }
-  header:hover button, button:focus-visible { opacity: 1; pointer-events: auto; }
+  body { position: relative; }
+  #actions { position: absolute; top: 8px; right: 16px; z-index: 20; display: flex; gap: 12px; padding: 12px; }
+  button { background: var(--bg); color: var(--text); font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 22px; opacity: 0; pointer-events: none; }
+  #actions:hover button, #actions:focus-within button { opacity: 1; pointer-events: auto; }
   button:hover { background: #314158; }
-  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); }
-  #complete { margin-left: auto; }
-  #editor { min-height: 0; min-width: 0; margin-inline: 36px; position: relative; }
+  button:focus-visible { outline: 2px solid var(--accent); }
+  #editor { height: 100%; min-height: 0; min-width: 0; margin-inline: 36px; position: relative; }
   #loading { padding: 36px; color: var(--muted); font-size: 28px; white-space: pre-wrap; }
   #status { position: absolute; bottom: 24px; left: 24px; right: 24px; padding: 16px; background: var(--bg); color: var(--accent); font-size: 24px; }
 </style>
 </head>
 <body>
-<header>
-  <span class="ts">TS</span>
-  <select id="files" aria-label="Fichier du projet TypeScript"></select>
+<div id="actions" role="group" aria-label="Actions de l’éditeur">
   <button id="complete" title="Afficher les suggestions à la position du curseur (Ctrl+Espace)">Compléter</button>
   <button id="reset" title="Restaurer tous les fichiers de cette page">Réinitialiser</button>
-</header>
+</div>
 <div id="editor"><div id="loading" role="status">Chargement de l’éditeur TypeScript…</div></div>
 <span id="status" role="status" hidden>Initialisation…</span>
 <script>
@@ -97,7 +90,6 @@
     activeFile = name;
     editor.setModel(models.get(name));
     if (views.has(name)) editor.restoreViewState(views.get(name));
-    document.getElementById('files').value = name;
     updateStatus();
     publish();
   }
@@ -157,16 +149,12 @@
           'editorHoverWidget.background': '#0F172B', 'editorHoverWidget.border': '#45556C',
         },
       });
-      const selector = document.getElementById('files');
       const allFiles = { ...files, ...state?.files };
       const ordered = [entry, ...Object.keys(allFiles).filter(n => n !== entry).sort()];
       for (const name of ordered) {
         const model = monaco.editor.createModel(allFiles[name], 'typescript', monaco.Uri.parse('file:///' + name));
         models.set(name, model);
         model.onDidChangeContent(publish);
-        const option = document.createElement('option');
-        option.value = option.textContent = name;
-        selector.appendChild(option);
       }
       document.getElementById('loading').remove();
       editor = monaco.editor.create(document.getElementById('editor'), {
@@ -192,7 +180,6 @@
       });
       select(state?.activeFile || entry);
       // No auto-focus: arrows navigate the deck until the presenter clicks code.
-      selector.onchange = () => select(selector.value);
       document.getElementById('complete').onmousedown = event => event.preventDefault();
       document.getElementById('complete').onclick = () => { editor.focus(); editor.trigger('demo', 'editor.action.triggerSuggest', {}); };
       document.getElementById('reset').onclick = () => {
