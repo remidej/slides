@@ -123,12 +123,13 @@
           react: ['node_modules/@types/react/index.d.ts'],
           'react/jsx-runtime': ['node_modules/@types/react/jsx-runtime.d.ts'],
           csstype: ['node_modules/csstype/index.d.ts'],
+          vitest: ['node_modules/vitest/index.d.ts'],
         },
       });
       ts.typescriptDefaults.setEagerModelSync(true);
       ts.typescriptDefaults.setDiagnosticsOptions({ noSemanticValidation: false, noSyntaxValidation: false });
       for (const [name, content] of Object.entries(types)) {
-        const path = name === 'csstype.d.ts' ? 'csstype/index.d.ts' : '@types/react/' + name;
+        const path = name.includes('/') ? name : name === 'csstype.d.ts' ? 'csstype/index.d.ts' : '@types/react/' + name;
         ts.typescriptDefaults.addExtraLib(content, 'file:///node_modules/' + path);
       }
       monaco.editor.defineTheme('remi-dark', {

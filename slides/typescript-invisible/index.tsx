@@ -2,6 +2,13 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Step, Steps, useIsActivePage, type DesignSystem, type Page, type SlideMeta, type SlideTransition } from '@open-slide/core';
 import editorDocument from './assets/editor.html?raw';
 import catLabel from './assets/cat-label.png';
+import homerInvisible from './assets/homer-invisible.png';
+import claudeLogo from './assets/claude-logo.png';
+import remiPortrait from './assets/remi-portrait.png';
+import zodLogo from './assets/zod.svg';
+import trpcLogo from './assets/trpc.svg';
+import reactRouterLogo from './assets/react-router.svg';
+import tanstackLogo from './assets/tanstack.svg';
 
 // remi.space/src/styles/global.css: gray = slate, primary = teal (Tailwind 4).
 // BaseLayout: dark:bg-gray-900, dark:text-gray-100; typography: Inter
@@ -33,9 +40,9 @@ if (typeof document !== 'undefined') {
 // Raw assets, NOT modules executed by the presentation. Adding a version here
 // automatically exposes it as an editable, importable file in every demo.
 const sourceAssets = import.meta.glob<string>(['./assets/*.ts', '!./assets/*.d.ts'], { query: '?raw', import: 'default', eager: true });
-const typeAssets = import.meta.glob<string>('./assets/types/*.d.ts', { query: '?raw', import: 'default', eager: true });
+const typeAssets = import.meta.glob<string>('./assets/types/**/*.d.ts', { query: '?raw', import: 'default', eager: true });
 const sources = Object.fromEntries(Object.entries(sourceAssets).map(([path, source]) => [path.split('/').pop()!, source]));
-const types = Object.fromEntries(Object.entries(typeAssets).map(([path, source]) => [path.split('/').pop()!, source]));
+const types = Object.fromEntries(Object.entries(typeAssets).map(([path, source]) => [path.split('/types/')[1], source]));
 
 const naiveKeys = `import { createMessages } from "./create-messages-naive";
 
@@ -94,7 +101,7 @@ messages.t("welcome", { name: "Alice" });     // ✅ accepté
 messages.t("welcome", { username: "Alice" }); // ✅ rejeté
 messages.t("welcome");                        // ✅ rejeté
 messages.t("goodbye");                        // ✅ accepté`;
-type DemoId = 'age-annotated' | 'age-inferred' | 'keys-naive' | 'keys-explicit' | 'keys-inferred' | 'loose' | 'manual' | 'authority' | 'inferred' | 'capture-erased' | 'capture-keys' | 'capture-literals' | 'assembled-live';
+type DemoId = 'age-annotated' | 'age-inferred' | 'keys-naive' | 'keys-explicit' | 'keys-inferred' | 'loose' | 'manual' | 'authority' | 'inferred' | 'capture-erased' | 'capture-keys' | 'capture-literals' | 'assembled-live' | 'type-tests';
 type DemoState = { files: Record<string, string>; activeFile: string };
 // Live changes survive page navigation, but never write to the source files.
 const sessions = new Map<DemoId, DemoState>();
@@ -439,6 +446,42 @@ const UnderTheHood: Page = () => (
   </section>
 );
 
+function ApiDesignBadge({ avoid = false }: { avoid?: boolean }) {
+  return (<span style={{ display: 'inline-block', flexShrink: 0, padding: '6px 18px', background: avoid ? '#fb923c' : 'var(--osd-accent)', color: avoid ? '#431407' : '#042f2e', borderRadius: 6, fontSize: 28, lineHeight: '38px', fontWeight: 700, letterSpacing: '0.04em', transform: 'rotate(-4deg)', boxShadow: '0 5px 12px #00000030' }}>{avoid ? 'À ÉVITER' : 'À FAIRE'}</span>);
+}
+
+function ApiDesignCell({ title, code, preferred = false }: { title: string; code: string; preferred?: boolean }) {
+  return (
+    <td style={{ padding: '24px 32px', verticalAlign: 'top', borderTop: `1px solid color-mix(in oklch, ${border} 65%, ${muted})`, borderLeft: preferred ? `1px solid color-mix(in oklch, ${border} 65%, ${muted})` : undefined }}>
+      <h2 style={{ margin: 0, fontSize: 34, lineHeight: '44px', fontWeight: 650, color: preferred ? 'var(--osd-accent)' : muted }}>{title}</h2>
+      <pre style={{ height: 160, margin: '20px 0 0', fontFamily: 'Menlo, Consolas, monospace', fontSize: 28, lineHeight: '40px', whiteSpace: 'pre-wrap' }}>{code}</pre>
+    </td>
+  );
+}
+
+const DesignForInference: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>CÔTÉ AUTEUR</SectionLabel>
+    <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>Bien choisir son design pattern</h1>
+    <div style={{ marginTop: 32, border: `1px solid color-mix(in oklch, ${border} 65%, ${muted})`, borderRadius: 'var(--osd-radius)' }}>
+    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 0 }}>
+      <thead><tr>
+        <th style={{ padding: '16px 32px 28px', textAlign: 'left' }}><ApiDesignBadge avoid /></th>
+        <th style={{ padding: '16px 32px 28px', textAlign: 'left', borderLeft: `1px solid color-mix(in oklch, ${border} 65%, ${muted})` }}><ApiDesignBadge /></th>
+      </tr></thead>
+      <tbody><tr>
+      <ApiDesignCell title="Configuration globale" code={'configureMessages(catalogue);\n\nt("welcome", { name: "Alice" });'} />
+      <ApiDesignCell title="Factory spécialisée" preferred code={'const messages = createMessages(catalogue);\n\nmessages.t("welcome", { name: "Alice" });'} />
+      </tr><tr>
+      <ApiDesignCell title="Registre mutable" code={'const messages = createMessages();\nmessages.add("welcome", "Bonjour {name} !");'} />
+      <ApiDesignCell title="Builder chaîné" preferred code={'const messages = messageBuilder()\n  .add("welcome", "Bonjour {name} !")\n  .build();'} />
+      </tr></tbody>
+    </table>
+    </div>
+    <Footer />
+  </section>
+);
+
 function MethodStage({ label, children, active = false }: { label: string; children: ReactNode; active?: boolean }) {
   return (
     <div style={{ width: 480, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40, color: active ? 'var(--osd-text)' : muted, background: surface, border: `1px solid ${border}`, borderRadius: 'var(--osd-radius)' }}>
@@ -643,6 +686,128 @@ const AssembledContractLive: Page = () => (
   </section>
 );
 
+const InvisibleMeme: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>COMPLEXITÉ</SectionLabel>
+    <h1 style={{ position: 'absolute', left: 120, top: 390, width: 960, margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 96, lineHeight: '120px', fontWeight: 650, letterSpacing: '-0.035em' }}>Est-ce que ça mérite sa complexité ?<span style={{ color: 'var(--osd-accent)' }}>{''}</span></h1>
+    <div style={{ position: 'absolute', right: 120, top: 190, width: 604.35, height: 680, transform: 'rotate(3deg)' }}>
+      <img src={homerInvisible} alt="Homer paraît mince de face, mais retient les plis de son dos avec ses mains." style={{ display: 'block', width: '100%', height: '100%' }} />
+      <div style={{ position: 'absolute', left: 20, right: 20, top: 238, textAlign: 'center', fontFamily: 'Impact, Arial Black, sans-serif', fontSize: 44, lineHeight: '48px', fontWeight: 900, color: '#fff', WebkitTextStroke: '2px #000', paintOrder: 'stroke fill', textShadow: '2px 3px 0 #000' }}>TypeScript<br />côté utilisateur</div>
+      <div style={{ position: 'absolute', left: 20, right: 20, bottom: 16, textAlign: 'center', fontFamily: 'Impact, Arial Black, sans-serif', fontSize: 44, lineHeight: '48px', fontWeight: 900, color: '#fff', WebkitTextStroke: '2px #000', paintOrder: 'stroke fill', textShadow: '2px 3px 0 #000' }}>TypeScript<br />côté auteur</div>
+    </div>
+    <Footer />
+  </section>
+);
+
+function ComplexityDrawing({ transform }: { transform: string }) {
+  return (
+      <g transform={transform} fill="none" stroke={muted} strokeWidth="3" opacity="0.85">
+        <path d="M30 50C300 0 380 260 130 240S40 30 290 80S360 280 180 160S380 40 390 210M50 210C220 280 350 20 170 30S10 160 240 250M80 100C360 180 20 300 320 130S240 10 60 270" />
+        <path d="M15 150H60V20H210V300H370V45H480V210H410M50 285L115 235L155 295L205 225L255 285L300 235M225 45L270 15L300 55L340 20L375 65L420 30" strokeDasharray="9 7" />
+        <path d="M345 150c-65-100 150-115 100-25s-145 60-90-5s120 65 30 105M90 90c-80-60-80 100 0 50s-60-120-50-20M460 250l20-20 20 20-20 20zM130 15l18 30h-36z" />
+        <circle cx="170" cy="150" r="48" /><circle cx="170" cy="150" r="27" />
+        <path d="M170 88V102M170 198V212M108 150H122M218 150H232M126 106L136 116M204 184L214 194M126 194L136 184M204 116L214 106" strokeWidth="7" />
+        <circle cx="480" cy="80" r="22" /><circle cx="55" cy="245" r="13" />
+        <path d="M300 305h80m-65 10h50m-35 10h20M420 285v-35h-25M285 175l20-10-20-10" />
+      </g>
+  );
+}
+
+const EncapsulatedComplexity: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>COMPLEXITÉ</SectionLabel>
+    <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>La complexité est encapsulée</h1>
+    <svg width="1680" height="540" viewBox="0 0 1680 540" role="img" aria-label="À gauche, la logique métier utilise une interface simple, à la frontière de l’implémentation plus complexe à droite." style={{ display: 'block', marginTop: 88 }}>
+      <rect x="998" y="20" width="680" height="480" rx="16" fill={surface} stroke={muted} strokeWidth="2" />
+      <text x="1038" y="86" fill={muted} fontSize="36" fontWeight="650">Implémentation plus complexe</text>
+      <ComplexityDrawing transform="translate(1640 140) scale(-1 1)" />
+      <rect x="892" y="150" width="212" height="220" rx="16" fill="var(--osd-bg)" stroke="var(--osd-accent)" strokeWidth="2" />
+      <text x="998" y="250" fill="var(--osd-accent)" textAnchor="middle" fontSize="36" fontWeight="650"><tspan x="998">Interface</tspan><tspan x="998" dy="50">simple</tspan></text>
+      <path d="M680 260H890M874 246L890 260L874 274" fill="none" stroke="var(--osd-accent)" strokeWidth="3" />
+      <rect x="2" y="110" width="678" height="300" rx="16" fill="none" stroke={muted} strokeWidth="2" />
+      <text x="341" y="277" textAnchor="middle" fill="var(--osd-text)" fontSize="52" fontWeight="650">Logique métier</text>
+    </svg>
+    <Footer />
+  </section>
+);
+
+const AgentImplementation: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>COMPLEXITÉ</SectionLabel>
+    <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>L'agent prend en charge l'implémentation</h1>
+    <svg width="1680" height="540" viewBox="0 0 1680 540" role="img" aria-label="Nous définissons l’API désirée, puis l’agent réalise l’implémentation complexe." style={{ display: 'block', marginTop: 88 }}>
+      <defs><clipPath id="agent-slide-portrait"><circle cx="130" cy="280" r="110" /></clipPath></defs>
+      <image href={remiPortrait} x="20" y="170" width="220" height="220" preserveAspectRatio="xMidYMid meet" clipPath="url(#agent-slide-portrait)" />
+      <path d="M320 30H550Q580 30 580 60V150Q580 180 550 180H325L270 205L290 155V60Q290 30 320 30Z" fill="var(--osd-bg)" stroke="var(--osd-accent)" strokeWidth="3" strokeLinejoin="round" />
+      <text x="435" y="95" fill="var(--osd-accent)" textAnchor="middle" fontSize="36" fontWeight="650"><tspan x="435">une API</tspan><tspan x="435" dy="50">de ouf</tspan></text>
+      <path d="M590 110H640Q680 110 680 150V220Q680 260 720 260H730M714 246L730 260L714 274M928 260H1040M1024 246L1040 260L1024 274" fill="none" stroke={muted} strokeWidth="3" />
+      <rect x="1050" y="20" width="628" height="480" rx="16" fill={surface} stroke={muted} strokeWidth="2" />
+      <text x="1082" y="80" fill={muted} fontSize="34" fontWeight="650">Implémentation complexe</text>
+      <ComplexityDrawing transform="translate(1640 140) scale(-1 1)" />
+      <image href={claudeLogo} x="740" y="170" width="180" height="180" />
+    </svg>
+    <Footer />
+  </section>
+);
+
+const typeTestsCode = `import { expectTypeOf } from "vitest";
+import { createMessages } from "./create-messages";
+
+const messages = createMessages({
+  welcome: "Bonjour {name} !",
+  goodbye: "À bientôt !",
+});
+
+expectTypeOf(messages.t<"welcome">).parameters
+  .toEqualTypeOf<["welcome", { name: string | number }]>();
+
+expectTypeOf(messages.t<"goodbye">).parameters
+  .toEqualTypeOf<["goodbye"]>();`;
+
+const TestTheTypes: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>COMPLEXITÉ</SectionLabel>
+    <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>On peut tester les types</h1>
+    <div style={{ display: 'grid', gridTemplateColumns: '1100px 520px', gap: 60, alignItems: 'center', marginTop: 32 }}>
+      <Editor id="type-tests" code={typeTestsCode} entry="create-messages.test-d.ts" height={640} fontSize={30} />
+      <div style={{ padding: '40px 36px', border: '2px solid var(--osd-accent)', borderRadius: 'var(--osd-radius)', background: surface }}>
+        <h2 style={{ margin: 0, fontSize: 44, lineHeight: '60px', fontWeight: 650, color: 'var(--osd-accent)' }}>TDD sur les types</h2>
+        <pre style={{ margin: '32px 0 0', fontFamily: 'monospace', fontSize: 36, lineHeight: '58px', color: 'var(--osd-text)' }}>vitest --typecheck</pre>
+      </div>
+    </div>
+    <Footer />
+  </section>
+);
+
+function DxComparison({ from, to, fromLogo, toLogo }: { from: string; to: string; fromLogo?: string; toLogo: string }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '530px 180px 610px', alignItems: 'center', height: 160 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+        <div style={{ width: 100, height: 100, flexShrink: 0 }}>{fromLogo && <img src={fromLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}</div>
+        <span style={{ fontSize: 48, lineHeight: '64px', fontWeight: 650 }}>{from}</span>
+      </div>
+      <svg width="120" height="48" viewBox="0 0 120 48" fill="none" stroke={muted} strokeWidth="3" aria-hidden="true"><path d="M4 24H108M92 8L108 24L92 40" /></svg>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+        <img src={toLogo} alt="" style={{ width: 100, height: 100, objectFit: 'contain' }} />
+        <span style={{ fontSize: 48, lineHeight: '64px', fontWeight: 650, color: 'var(--osd-accent)' }}>{to}</span>
+      </div>
+    </div>
+  );
+}
+
+const DifferentiatingDx: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>DX</SectionLabel>
+    <h1 style={{ margin: '62px 0 0', fontFamily: 'var(--osd-font-display)', fontSize: 64, lineHeight: '84px', fontWeight: 650, letterSpacing: '-0.035em' }}>La DX peut être différenciante</h1>
+    <div style={{ marginTop: 64, marginLeft: 140, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <DxComparison from="Yup" to="Zod" toLogo={zodLogo} />
+      <DxComparison from="REST" to="tRPC" toLogo={trpcLogo} />
+      <DxComparison from="React Router" to="TanStack Start" fromLogo={reactRouterLogo} toLogo={tanstackLogo} />
+    </div>
+    <Footer />
+  </section>
+);
+
 export const transition: SlideTransition = {
   duration: 240,
   enter: { easing: 'cubic-bezier(0, 0, 0.2, 1)', keyframes: [{ opacity: 0 }, { opacity: 1 }] },
@@ -660,6 +825,7 @@ export const notes = [
   'Cette version de l’API accepte un contrat manuel : le générique décrit les paramètres par clé, et never signifie aucun paramètre. Survoler t. Dans le dernier appel, remplacer name par username pour voir l’erreur, puis retirer le deuxième argument. Restaurer name ou réinitialiser. Ça fonctionne, mais les noms des paramètres sont écrits à deux endroits. On utilise string | number : le nom count ne suffit pas à inférer un type numérique.',
   'On supprime la description manuelle : les messages définissent eux-mêmes leurs paramètres. Survoler les deux erreurs, corriger username avec l’autocomplétion, puis modifier {name} en {firstName} dans le dictionnaire. Cette fois, l’appel avec name devient invalide et firstName est suggéré. Comme pour les clés, les types sont déduits du dictionnaire. Ici, on extrait les noms entre accolades dans les strings, sans type explicite ni as const côté consommateur.',
   'Pour obtenir ce comportement, createMessages doit conserver les types littéraux des messages, en déduire les paramètres et vérifier les appels. Deux étapes permettent de concevoir cette API : capturer l’information, puis l’exploiter pour définir les appels autorisés. L’implémentation cible est disponible dans le fichier assets/create-messages.ts du deck, avec les versions loose et manual.',
+  'Le design runtime de l’API prépare l’inférence. En haut : une configuration globale ne spécialise pas automatiquement le type de la fonction t utilisée ailleurs ; une factory retourne une instance dont le type peut capturer le catalogue reçu. catalogue désigne ici notre dictionnaire de traductions. En bas : les mutations ordinaires ne font pas automatiquement évoluer le type de messages ; dans un builder chaîné, chaque retour peut porter un type enrichi, utilisé par l’étape suivante. Les deux formes peuvent offrir le même comportement runtime. Ces exemples comparent des designs, pas des implémentations exécutables. Les badges concernent notre objectif d’inférence locale, pas une interdiction générale de ces patterns. Les bonnes formes ne suffisent pas : leurs signatures doivent préserver et exploiter les informations. C’est ce que nous allons voir.',
   'Deux étapes : capturer l’information depuis les valeurs, puis l’exploiter pour dériver le contrat de notre API. Pas besoin de retenir une implémentation : le but est de reconnaître les outils utiles et les relations à demander à un agent. On commence par capturer.',
   'Commençons par une signature plausible : un dictionnaire de chaînes. Le consommateur passe bien welcome et goodbye, avec le texte Bonjour {name} !. Mais à l’intérieur de la fonction, dictionary est seulement un Record<string, string>. keyof typeof dictionary vaut string, et le message welcome est typé string. La valeur à l’exécution n’a pas changé : c’est la signature qui ne conserve pas ses détails. On ne peut pas construire notre contrat précis à partir de ce seul type. createDictionary renvoie le dictionnaire pour rendre son type observable. Survoler la constante dictionary : les clés et les valeurs exactes ont été effacées par l’annotation.',
   'On remplace l’annotation générale par un paramètre de type T. extends impose toujours un dictionnaire de chaînes, mais T est inféré depuis l’objet reçu. Pour cet objet passé directement à createDictionary, les clés sont maintenant welcome et goodbye. Survoler la constante dictionary pour voir les propriétés inférées. En revanche, T["welcome"] reste string : les propriétés de cet objet peuvent être modifiées, donc leur texte est élargi. On a récupéré les clés, pas encore le nom du paramètre. Le consommateur n’a rien changé et n’a écrit aucun générique.',
@@ -671,9 +837,14 @@ export const notes = [
   'Un mapped type transforme chaque nom extrait en propriété attendue. On obtient la forme du paramètre sans la déclarer une seconde fois. Attention : count ne veut pas automatiquement dire number. Accepter string ou number est ici notre décision de conception, pas une information déduite du nom.',
   'Dernière adaptation : aucun placeholder, aucun argument de paramètres ; des placeholders, un objet obligatoire. Les types conditionnels permettent ce choix. never représente ici l’absence de noms extraits, pas un paramètre à fournir. Le modèle mental est : données, choix possibles, information sélectionnée, contrat dérivé. Vous pouvez décrire cette chaîne à un agent sans mémoriser la syntaxe. Si le temps le permet, revenir à la démo consommateur et remplacer name par firstName pour montrer que tout suit.',
   'Voici comment les outils se rejoignent pour définir le contrat de notre API. Les types déduits deviennent les types des paramètres : TypeScript vérifie alors les appels, sans validation à l’exécution. Pas besoin de retenir chaque symbole de cette signature. Le code provient directement de assets/create-messages.ts ; seules des régions de repli et des coupures de ligne sont ajoutées. Les utilitaires et le remplacement runtime sont repliés au départ. Montrer const M, key: K & keyof M, puis Arguments<M[K]>. Survoler les types ou déplier les régions avec les chevrons si utile. Réinitialiser restaure le code et les replis ; Échap rend le clavier à la présentation.',
+  'Laisser la salle regarder le mème. Invisible… côté utilisateur ! La complexité n’a pas disparu : on l’a déplacée côté auteur. Et dans un monde où les agents écrivent de plus en plus de code, est-ce que cet effort en vaut encore la peine ? Transition vers la discussion sur le vibe coding, sans donner la réponse tout de suite.',
+  'Première réponse à la question de la complexité : elle est localisée. Placeholders, Values et Arguments sont implémentés ensemble dans create-messages.ts. Le code métier utilise le résultat à travers une API simple ; il ne réécrit ni les génériques ni les conditionnels à chaque appel. Les règles se propagent, pas leur implémentation. Cela ne supprime pas le coût de maintenance du module, et des diagnostics trop compliqués peuvent encore nuire à son utilisation : la qualité de cette frontière fait partie du travail de conception. Mais ce coût peut être mutualisé sur tous les usages. Nous pourrons ensuite montrer comment tester ce contrat.',
+  'Lire le diagramme de gauche à droite : nous définissons l’API désirée, l’agent réalise l’implémentation complexe. Nous concentrons la conception sur une interface simple et la DX souhaitée. Pas besoin de savoir écrire chaque type de mémoire : il faut savoir ce qui est possible pour le demander et évaluer le résultat. Cette DX n’est pas garantie par défaut ; notre intention doit être explicite. Déléguer ne dispense pas de vérifier : la slide suivante montre les tests de types.',
+  'Avec Vitest, expectTypeOf spécifie le contrat attendu. Pour welcome, les arguments comprennent la clé et un objet name obligatoire ; pour goodbye, la clé seule. t<"welcome"> spécialise la fonction pour inspecter ce cas dans le test, sans rendre les génériques nécessaires dans le code métier. Remplacer {name} par {firstName} : le premier test échoue dans les diagnostics TypeScript. Mettre à jour le contrat attendu ou réinitialiser. Ces tests peuvent guider un agent et sécuriser le refactoring, sans remplacer les tests runtime. Dans un projet, utiliser un fichier .test-d.ts et vitest --typecheck. Ici, les vraies déclarations expect-type 1.2.2 sont exposées via une façade de typage vitest : Monaco vérifie les assertions, mais aucun runner Vitest ne tourne dans le navigateur.',
+  'Pour une bibliothèque ou un framework, la DX est une part centrale du produit. Une meilleure expérience de typage peut donc constituer une raison de choisir ou de créer une alternative. Ces flèches illustrent des positionnements, pas une migration obligatoire ni une supériorité universelle : Yup offre aussi du typage ; REST peut être consommé via des clients générés et typés ; React Router et TanStack Start ne sont pas strictement équivalents et couvrent des usages différents. Le propos est le poids différenciant accordé à la type safety et à l’inférence, pas une explication unique de leur succès. Logos téléchargés depuis le catalogue api.svgl.app : Zod, tRPC, React Router et logo de famille TanStack pour Start. Yup et REST ne figuraient pas dans ce catalogue lors de la création : noms affichés sans logo.',
 ];
 export const meta: SlideMeta = {
   title: 'Rendre TypeScript invisible',
   createdAt: '2026-10-02T08:39:03.778Z',
 };
-export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive] satisfies Page[];
+export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, DesignForInference, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive, InvisibleMeme, EncapsulatedComplexity, AgentImplementation, TestTheTypes, DifferentiatingDx] satisfies Page[];
