@@ -4,6 +4,8 @@ import editorDocument from './assets/editor.html?raw';
 import catLabel from './assets/cat-label.png';
 import homerInvisible from './assets/homer-invisible.png';
 import claudeLogo from './assets/claude-logo.png';
+import codexLogo from './assets/codex.svg';
+import cursorLogo from './assets/cursor.svg';
 import remiPortrait from './assets/remi-portrait.png';
 import zodLogo from './assets/zod.svg';
 import trpcLogo from './assets/trpc.svg';
@@ -364,10 +366,18 @@ const Intro: Page = () => (
   </section>
 );
 
+const InferenceSection: Page = () => (
+  <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
+    <SectionLabel>L’INFÉRENCE</SectionLabel>
+    <h1 style={{ margin: 0, fontFamily: 'var(--osd-font-display)', fontSize: 112, lineHeight: '132px', fontWeight: 650, letterSpacing: '-0.035em' }}>C'est quoi l'inférence ?</h1>
+    <Footer />
+  </section>
+);
+
 function InferenceIntro({ annotated, showCat = false }: { annotated: boolean; showCat?: boolean }) {
   return (
     <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
-      <SectionLabel>CÔTÉ UTILISATEUR</SectionLabel>
+      <SectionLabel>{annotated ? "L’INFÉRENCE" : 'CÔTÉ UTILISATEUR'}</SectionLabel>
       <Editor id={annotated ? 'age-annotated' : 'age-inferred'} code={annotated ? 'let age: number = 18;' : 'let age = 18;'} entry="demo.ts" height={260} fontSize={64} />
       <p style={{ margin: '40px 0 0', fontSize: 40, lineHeight: '60px', color: muted }}>
         {annotated ? 'Type redondant' : 'Type ✨déduit✨'}
@@ -440,7 +450,7 @@ const InferredParams: Page = () => <DemoPage id="inferred" title="Utiliser le co
 
 const UnderTheHood: Page = () => (
   <section style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', padding: '100px 120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--osd-bg)', color: 'var(--osd-text)', fontFamily: 'var(--osd-font-body)' }}>
-    <div style={{ fontSize: 24, color: 'var(--osd-accent)', letterSpacing: '0.09em' }}>CÔTÉ AUTEUR</div>
+    <SectionLabel>CÔTÉ AUTEUR</SectionLabel>
     <h1 style={{ fontSize: 112, lineHeight: '132px', fontWeight: 650, letterSpacing: '-0.035em', margin: '32px 0 48px' }}>Comment concevoir ses API<br />pour l'inférence</h1>
     <Footer />
   </section>
@@ -808,12 +818,110 @@ const DifferentiatingDx: Page = () => (
   </section>
 );
 
+function BentoCell({ children, column, row, accent = false, size = 44, mono = false, background }: { children: ReactNode; column: string; row: string; accent?: boolean; size?: number; mono?: boolean; background?: ReactNode }) {
+  return (
+    <div style={{ position: 'relative', gridColumn: column, gridRow: row, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, boxSizing: 'border-box', borderRadius: 24, border: `1px solid ${accent ? 'var(--osd-accent)' : border}`, background: accent ? 'color-mix(in oklch, var(--osd-accent) 12%, var(--osd-bg))' : surface, color: accent ? 'var(--osd-accent)' : 'var(--osd-text)', textAlign: 'center', fontFamily: mono ? 'Menlo, Consolas, monospace' : 'var(--osd-font-display)', fontSize: size, lineHeight: 1.3, fontWeight: 650, letterSpacing: '-0.025em' }}>
+      {background}
+      <div style={{ position: 'relative' }}>{children}</div>
+    </div>
+  );
+}
+
+function BentoTool({ children, mono = false }: { children: ReactNode; mono?: boolean }) {
+  return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 84, padding: '12px 20px', boxSizing: 'border-box', borderRadius: 12, background: 'var(--osd-bg)', border: `1px solid ${border}`, color: 'var(--osd-text)', fontSize: 30, lineHeight: 1.3, fontWeight: 500, fontFamily: mono ? 'Menlo, Consolas, monospace' : 'var(--osd-font-body)' }}>{children}</div>;
+}
+
+const ClosingBento: Page = () => (
+  <section style={{ width: '100%', height: '100%', boxSizing: 'border-box', padding: 120, background: 'var(--osd-bg)', fontFamily: 'var(--osd-font-body)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridTemplateRows: 'repeat(4, minmax(0, 1fr))', gap: 24, height: 840 }}>
+      <BentoCell column="1 / 3" row="1 / 4" size={56}>
+        <div style={{ marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+          <span>Boîte à outils</span>
+          <svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="TypeScript" style={{ flexShrink: 0 }}>
+            <rect width="64" height="64" rx="2" fill="#3178c6" />
+            <text x="59" y="55" textAnchor="end" fill="#fff" fontFamily="Arial, sans-serif" fontSize="36" fontWeight="700" letterSpacing="-2">TS</text>
+          </svg>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 330px)', gap: 16 }}>
+          <BentoTool mono>T</BentoTool>
+          <BentoTool mono>const T</BentoTool>
+          <BentoTool mono>keyof</BentoTool>
+          <BentoTool mono>T[K]</BentoTool>
+          <BentoTool>Template literals</BentoTool>
+          <BentoTool mono>infer</BentoTool>
+          <BentoTool>Mapped types</BentoTool>
+          <BentoTool>Types conditionnels</BentoTool>
+        </div>
+      </BentoCell>
+      <BentoCell column="3 / 5" row="1" size={52}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" stroke={muted} strokeWidth="3" aria-hidden="true" style={{ flexShrink: 0 }}>
+            <path d="M32 32L17 17M48 32L63 17M32 48L17 63M48 48L63 63" />
+            <circle cx="40" cy="40" r="12" fill={muted} stroke="none" />
+            <circle cx="12" cy="12" r="7" /><circle cx="68" cy="12" r="7" />
+            <circle cx="12" cy="68" r="7" /><circle cx="68" cy="68" r="7" />
+          </svg>
+          <span>Source de vérité unique</span>
+        </div>
+      </BentoCell>
+      <BentoCell column="3" row="2" size={40}>Factory / Builder</BentoCell>
+      <BentoCell column="4" row="2" size={40} background={
+        <svg viewBox="0 0 540 350" preserveAspectRatio="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', borderRadius: 24, opacity: 0.33, pointerEvents: 'none' }}>
+          <ComplexityDrawing transform="translate(10 5)" />
+        </svg>
+      }>
+        Complexité<br />encapsulée
+      </BentoCell>
+      <BentoCell column="3" row="3" size={52}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="24" cy="24" r="20" /><path d="M14 24L21 31L34 17" />
+          </svg>
+          <span>TDD</span>
+        </div>
+        <code style={{ fontSize: 28, color: muted }}>expectTypeOf</code>
+      </BentoCell>
+      <BentoCell column="4" row="3 / 5" size={43}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 32 }}>
+          <img src={codexLogo} alt="Codex" style={{ width: 72, height: 72, objectFit: 'contain' }} />
+          <img src={claudeLogo} alt="Claude" style={{ width: 80, height: 80, objectFit: 'contain' }} />
+          <img src={cursorLogo} alt="Cursor" style={{ width: 72, height: 72, objectFit: 'contain' }} />
+        </div>
+        Prompt<br />engineering
+      </BentoCell>
+      <BentoCell column="1 / 3" row="4" size={48}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+          <div>
+            <svg width="48" height="48" viewBox="0 0 180 180" fill="none" stroke={muted} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'block', margin: '0 auto 10px' }}>
+              <path d="M54 24H24V54M126 24H156V54M24 126V156H54M156 126V156H126" />
+              <rect x="62" y="62" width="56" height="56" rx="8" fill={muted} stroke="none" />
+            </svg>
+            Capturer
+          </div>
+          <span style={{ color: muted }}>→</span>
+          <div>
+            <svg width="48" height="48" viewBox="0 0 180 180" fill="none" stroke={muted} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'block', margin: '0 auto 10px' }}>
+              <rect x="18" y="70" width="40" height="40" rx="6" fill={muted} stroke="none" />
+              <path d="M58 90H96M96 90V40H134M96 90V140H134" />
+              <rect x="134" y="22" width="36" height="36" rx="6" />
+              <rect x="134" y="122" width="36" height="36" rx="6" />
+            </svg>
+            Exploiter
+          </div>
+        </div>
+      </BentoCell>
+      <BentoCell column="3" row="4" size={64}>DX</BentoCell>
+    </div>
+  </section>
+);
+
 export const transition: SlideTransition = {
   duration: 240,
   enter: { easing: 'cubic-bezier(0, 0, 0.2, 1)', keyframes: [{ opacity: 0 }, { opacity: 1 }] },
 };
 export const notes = [
   'On peut concevoir une API TypeScript qui se consomme comme du JavaScript, avec l’autocomplétion et la vérification des types. L’utilisateur n’a pas à répéter dans des types ce que son code indique déjà. L’exemple sera un petit catalogue de messages ; la gestion complète des langues reste hors du périmètre.',
+  undefined,
   'Avec const age: number = 18, je précise le type number par une annotation. TypeScript peut déjà le déduire de la valeur 18. Ne pas appeler cette annotation un cast.',
   'C’est un peu comme coller une étiquette CAT sur un chat. Merci, on avait reconnu. Ici, l’annotation répète une information déjà évidente dans la valeur. Laisser le temps à la salle de voir l’image, puis avancer vers la version sans annotation. Le propos porte sur cette annotation redondante, pas sur toutes les annotations de types.',
   'Déduire un type à partir du code, c’est l’inférence. Survoler age si utile : avec const, TypeScript connaît même la valeur exacte, le type littéral 18. Ne pas ouvrir une parenthèse sur le widening à ce stade.',
@@ -825,8 +933,8 @@ export const notes = [
   'Cette version de l’API accepte un contrat manuel : le générique décrit les paramètres par clé, et never signifie aucun paramètre. Survoler t. Dans le dernier appel, remplacer name par username pour voir l’erreur, puis retirer le deuxième argument. Restaurer name ou réinitialiser. Ça fonctionne, mais les noms des paramètres sont écrits à deux endroits. On utilise string | number : le nom count ne suffit pas à inférer un type numérique.',
   'On supprime la description manuelle : les messages définissent eux-mêmes leurs paramètres. Survoler les deux erreurs, corriger username avec l’autocomplétion, puis modifier {name} en {firstName} dans le dictionnaire. Cette fois, l’appel avec name devient invalide et firstName est suggéré. Comme pour les clés, les types sont déduits du dictionnaire. Ici, on extrait les noms entre accolades dans les strings, sans type explicite ni as const côté consommateur.',
   'Pour obtenir ce comportement, createMessages doit conserver les types littéraux des messages, en déduire les paramètres et vérifier les appels. Deux étapes permettent de concevoir cette API : capturer l’information, puis l’exploiter pour définir les appels autorisés. L’implémentation cible est disponible dans le fichier assets/create-messages.ts du deck, avec les versions loose et manual.',
-  'Le design runtime de l’API prépare l’inférence. En haut : une configuration globale ne spécialise pas automatiquement le type de la fonction t utilisée ailleurs ; une factory retourne une instance dont le type peut capturer le catalogue reçu. catalogue désigne ici notre dictionnaire de traductions. En bas : les mutations ordinaires ne font pas automatiquement évoluer le type de messages ; dans un builder chaîné, chaque retour peut porter un type enrichi, utilisé par l’étape suivante. Les deux formes peuvent offrir le même comportement runtime. Ces exemples comparent des designs, pas des implémentations exécutables. Les badges concernent notre objectif d’inférence locale, pas une interdiction générale de ces patterns. Les bonnes formes ne suffisent pas : leurs signatures doivent préserver et exploiter les informations. C’est ce que nous allons voir.',
   'Deux étapes : capturer l’information depuis les valeurs, puis l’exploiter pour dériver le contrat de notre API. Pas besoin de retenir une implémentation : le but est de reconnaître les outils utiles et les relations à demander à un agent. On commence par capturer.',
+  'Le design runtime de l’API prépare l’inférence. En haut : une configuration globale ne spécialise pas automatiquement le type de la fonction t utilisée ailleurs ; une factory retourne une instance dont le type peut capturer le catalogue reçu. catalogue désigne ici notre dictionnaire de traductions. En bas : les mutations ordinaires ne font pas automatiquement évoluer le type de messages ; dans un builder chaîné, chaque retour peut porter un type enrichi, utilisé par l’étape suivante. Les deux formes peuvent offrir le même comportement runtime. Ces exemples comparent des designs, pas des implémentations exécutables. Les badges concernent notre objectif d’inférence locale, pas une interdiction générale de ces patterns. Les bonnes formes ne suffisent pas : leurs signatures doivent préserver et exploiter les informations. C’est ce que nous allons voir.',
   'Commençons par une signature plausible : un dictionnaire de chaînes. Le consommateur passe bien welcome et goodbye, avec le texte Bonjour {name} !. Mais à l’intérieur de la fonction, dictionary est seulement un Record<string, string>. keyof typeof dictionary vaut string, et le message welcome est typé string. La valeur à l’exécution n’a pas changé : c’est la signature qui ne conserve pas ses détails. On ne peut pas construire notre contrat précis à partir de ce seul type. createDictionary renvoie le dictionnaire pour rendre son type observable. Survoler la constante dictionary : les clés et les valeurs exactes ont été effacées par l’annotation.',
   'On remplace l’annotation générale par un paramètre de type T. extends impose toujours un dictionnaire de chaînes, mais T est inféré depuis l’objet reçu. Pour cet objet passé directement à createDictionary, les clés sont maintenant welcome et goodbye. Survoler la constante dictionary pour voir les propriétés inférées. En revanche, T["welcome"] reste string : les propriétés de cet objet peuvent être modifiées, donc leur texte est élargi. On a récupéré les clés, pas encore le nom du paramètre. Le consommateur n’a rien changé et n’a écrit aucun générique.',
   'On ajoute const devant T : les types affichés au survol viennent du vrai service TypeScript de Monaco. Ce modificateur conserve les valeurs littérales de l’objet passé directement à la fonction, sans as const côté consommateur ; il ne gèle pas l’objet à l’exécution et ne récupère pas une valeur déjà élargie en string. Cette fonction renvoie uniquement le dictionnaire pour rendre T observable, elle ne remplace pas notre API complète. Survoler la constante dictionary : son type révèle les clés welcome et goodbye ainsi que leurs valeurs littérales, dont "Bonjour {name} !". createDictionary distingue cette démonstration de l’API createMessages de la première partie. Retirer const devant T dans l’éditeur, puis refaire les survols : les clés restent connues, mais welcome devient string. Restaurer const ou utiliser Réinitialiser. Les changements restent propres à cette page. Échap rend le clavier à la présentation. Monaco nécessite un accès à cdn.jsdelivr.net.',
@@ -847,4 +955,4 @@ export const meta: SlideMeta = {
   title: 'Rendre TypeScript invisible',
   createdAt: '2026-10-02T08:39:03.778Z',
 };
-export default [Intro, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, DesignForInference, InferenceMethod, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive, InvisibleMeme, EncapsulatedComplexity, AgentImplementation, TestTheTypes, DifferentiatingDx] satisfies Page[];
+export default [Intro, InferenceSection, AnnotatedAge, RedundantAnnotation, InferredAge, InferenceQuestion, NaiveKeys, ExplicitKeys, InferredKeys, LooseParams, ManualParams, InferredParams, UnderTheHood, InferenceMethod, DesignForInference, ErasedInformation, CapturedKeys, CapturedLiteralsLive, ExploitMethod, ExploitKeys, ExploitSelection, ExploitText, ExploitShape, ExploitArguments, AssembledContractLive, InvisibleMeme, EncapsulatedComplexity, AgentImplementation, TestTheTypes, DifferentiatingDx, ClosingBento] satisfies Page[];
